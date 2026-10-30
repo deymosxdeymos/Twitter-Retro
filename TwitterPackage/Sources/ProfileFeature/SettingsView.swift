@@ -39,16 +39,22 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Picker("Tweet Layout", selection: Binding($postRowStyle)) {
-                        ForEach(PostRowStyle.allCases, id: \.self) { style in
-                            Text(style.title)
+                    LabeledContent("Tweet Layout") {
+                        Picker("Tweet Layout", selection: Binding($postRowStyle)) {
+                            ForEach(PostRowStyle.allCases, id: \.self) { style in
+                                Text(style.title)
+                            }
                         }
+                        .labelsHidden()
                     }
 
-                    Picker("Appearance", selection: Binding($appearance)) {
-                        ForEach(Appearance.allCases, id: \.self) { appearance in
-                            Text(appearance.title)
+                    LabeledContent("Appearance") {
+                        Picker("Appearance", selection: Binding($appearance)) {
+                            ForEach(Appearance.allCases, id: \.self) { appearance in
+                                Text(appearance.title)
+                            }
                         }
+                        .labelsHidden()
                     }
 
                     Toggle("Sounds", isOn: Binding($playsSounds))
@@ -80,12 +86,18 @@ struct SettingsView: View {
                     }
                 #endif
             }
+            .formStyle(.classicGrouped)
+            .classicTitleBar()
+            .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", role: .confirm) { dismiss() }
+                        .buttonStyle(.classicProminent)
+                        .fixedSize()
                 }
+                .sharedBackgroundVisibility(.hidden)
             }
         }
     }
