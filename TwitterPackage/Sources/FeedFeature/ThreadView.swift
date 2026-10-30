@@ -95,8 +95,7 @@ private struct ReplyBar: View {
             .padding(.vertical, 8)
             .contentShape(.rect)
         }
-        .buttonStyle(.plain)
-        .classicFieldShelf()
+        .buttonStyle(.classicField)
         .accessibilityLabel("Reply to @\(tweet.author.screenName)")
     }
 }

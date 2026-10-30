@@ -15,6 +15,7 @@ package struct ClassicGroupedFormStyle: FormStyle {
         }
         .labeledContentStyle(ClassicRowLabeledContentStyle())
         .toggleStyle(.classicSwitch)
+        .buttonStyle(ClassicRowButtonStyle())
         .pickerStyle(.menu)
         .tint(Color(.settingsValue))
     }
@@ -22,6 +23,12 @@ package struct ClassicGroupedFormStyle: FormStyle {
 
 extension FormStyle where Self == ClassicGroupedFormStyle {
     package static var classicGrouped: ClassicGroupedFormStyle { ClassicGroupedFormStyle() }
+}
+
+private enum ClassicRow {
+    static let horizontalPadding: CGFloat = 14
+    static let verticalPadding: CGFloat = 8
+    static let labelFont = Font.body.weight(.semibold)
 }
 
 private struct ClassicFormSection: View {
@@ -68,8 +75,8 @@ private struct ClassicFormGroup: View {
             ForEach(rows) { row in
                 row
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, ClassicRow.horizontalPadding)
+                    .padding(.vertical, ClassicRow.verticalPadding)
                     .contentShape(.rect)
 
                 if row.id != rows.last?.id {
@@ -88,7 +95,7 @@ private struct ClassicRowLabeledContentStyle: LabeledContentStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.label
-                .font(.body.weight(.semibold))
+                .font(ClassicRow.labelFont)
                 .foregroundStyle(.primary)
 
             Spacer(minLength: 12)
@@ -99,16 +106,46 @@ private struct ClassicRowLabeledContentStyle: LabeledContentStyle {
     }
 }
 
+private struct ClassicRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(ClassicRow.labelFont)
+            .foregroundStyle(foreground(configuration))
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(.rect)
+            .background {
+                if configuration.isPressed {
+                    LinearGradient(
+                        colors: [Color(.rowPressedTop), Color(.rowPressedBottom)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .padding(.horizontal, -ClassicRow.horizontalPadding)
+                    .padding(.vertical, -ClassicRow.verticalPadding)
+                }
+            }
+    }
+
+    private func foreground(_ configuration: Configuration) -> Color {
+        if configuration.isPressed { return .white }
+        return configuration.role == .destructive ? .red : .primary
+    }
+}
+
 package struct ClassicSwitchToggleStyle: ToggleStyle {
     package func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.label
-                .font(.body.weight(.semibold))
+                .font(ClassicRow.labelFont)
 
             Spacer(minLength: 12)
 
             ClassicSwitch(isOn: configuration.$isOn)
         }
+        .frame(minHeight: 44)
+        .contentShape(.rect)
+        .onTapGesture { configuration.isOn.toggle() }
+        .sensoryFeedback(.selection, trigger: configuration.isOn)
         .accessibilityRepresentation {
             Toggle(isOn: configuration.$isOn) { configuration.label }
         }
@@ -121,18 +158,21 @@ extension ToggleStyle where Self == ClassicSwitchToggleStyle {
 
 private struct ClassicSwitch: View {
     @Binding var isOn: Bool
+    @State private var drag: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let width: CGFloat = 79
     private let height: CGFloat = 27
     private var travel: CGFloat { width - height }
+    private var knob: CGFloat { min(max((isOn ? travel : 0) + drag, 0), travel) }
+    private var motion: Animation? { reduceMotion ? nil : .spring(duration: 0.22, bounce: 0) }
 
     var body: some View {
         let track = Capsule()
         HStack(spacing: 0) {
             Text("ON")
                 .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.35), radius: 0, y: -1)
+                .shadow(color: Color(.switchOnTextShadow), radius: 0, y: -1)
                 .frame(width: travel + height / 2)
                 .frame(maxHeight: .infinity)
                 .background(
@@ -151,11 +191,11 @@ private struct ClassicSwitch: View {
                 )
         }
         .font(.system(size: 15, weight: .bold))
-        .offset(x: isOn ? 0 : -travel)
+        .offset(x: knob - travel)
         .frame(width: width, height: height, alignment: .leading)
         .clipShape(track)
         .overlay {
-            LinearGradient(colors: [.black.opacity(0.25), .clear], startPoint: .top, endPoint: .center)
+            LinearGradient(colors: [Color(.switchTrackShade), .clear], startPoint: .top, endPoint: .center)
                 .clipShape(track)
                 .allowsHitTesting(false)
         }
@@ -167,13 +207,23 @@ private struct ClassicSwitch: View {
                         colors: [Color(.switchKnobTop), Color(.switchKnobBottom)], startPoint: .top, endPoint: .bottom)
                 )
                 .overlay { Circle().strokeBorder(Color(.switchBorder)) }
-                .shadow(color: .black.opacity(0.3), radius: 1, y: 1)
+                .shadow(color: Color(.switchKnobShadow), radius: 1, y: 1)
                 .frame(width: height, height: height)
-                .offset(x: isOn ? travel : 0)
+                .offset(x: knob)
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: isOn)
+        .animation(motion, value: isOn)
         .contentShape(track)
-        .onTapGesture { isOn.toggle() }
-        .sensoryFeedback(.selection, trigger: isOn)
+        .gesture(
+            DragGesture(minimumDistance: 2)
+                .onChanged { drag = $0.translation.width }
+                .onEnded { value in
+                    let end = min(max((isOn ? travel : 0) + value.translation.width, 0), travel)
+                    withAnimation(motion) {
+                        drag = 0
+                        isOn = end > travel / 2
+                    }
+                }
+        )
+        .accessibilityHidden(true)
     }
 }

@@ -14,7 +14,7 @@ The current reducers, API client, database, text handling, media playback and co
 - Rounded-square avatars (including the profile header's ring and the profile preview), bitmap action icons, gold favorite stars and corner dog-ears.
 - A standard media overlay instead of the fold-aware arrangement.
 - Settings in the old grouped style: the column stack's hatched backdrop, bordered white groups, letterpressed headers, blue values, iOS 5-style ON/OFF switches, the silver bar and a blue Done button (`ClassicForm.swift`, applied with `.formStyle(.classicGrouped)`).
-- Settings → Display and Sound → Appearance: System, Light or Dark, switching with a short crossfade (instant with Reduce Motion).
+- Settings → Display and Sound → Appearance: a System / Light / Dark segmented control, switching with a short crossfade (instant with Reduce Motion).
 - The bottom bar calls the current tab actions. Reselecting a tab still returns to its root or scrolls it to the top. Holding Compose opens a menu with Drafts. The Notifications tab keeps its unread badge.
 
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.

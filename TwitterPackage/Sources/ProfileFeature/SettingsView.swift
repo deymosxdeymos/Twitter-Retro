@@ -49,12 +49,10 @@ struct SettingsView: View {
                     }
 
                     LabeledContent("Appearance") {
-                        Picker("Appearance", selection: Binding($appearance)) {
-                            ForEach(Appearance.allCases, id: \.self) { appearance in
-                                Text(appearance.title)
-                            }
+                        ClassicSegmentedControl(Appearance.allCases, selection: Binding($appearance)) { appearance in
+                            Text(appearance.title)
                         }
-                        .labelsHidden()
+                        .frame(maxWidth: 220)
                     }
 
                     Toggle("Sounds", isOn: Binding($playsSounds))

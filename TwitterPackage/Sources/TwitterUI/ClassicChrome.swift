@@ -238,36 +238,28 @@ private struct ClassicShelf: View {
     }
 }
 
-extension View {
-    package func classicFieldShelf() -> some View {
-        modifier(ClassicFieldShelf())
-    }
-}
-
-private struct ClassicFieldShelf: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-
-    func body(content: Content) -> some View {
-        let isDark = colorScheme == .dark
+package struct ClassicFieldButtonStyle: ButtonStyle {
+    package func makeBody(configuration: Configuration) -> some View {
         let well = RoundedRectangle(cornerRadius: 6)
-        content
+        configuration.label
             .background {
                 well.fill(
                     Color(.systemBackground)
-                        .shadow(.inner(color: .black.opacity(isDark ? 0.6 : 0.25), radius: 1.5, y: 1))
+                        .shadow(.inner(color: Color(.fieldWellShadow), radius: 1.5, y: 1))
                 )
+                .brightness(configuration.isPressed ? -0.08 : 0)
             }
             .overlay {
                 well.strokeBorder(
                     LinearGradient(
-                        colors: [.black.opacity(isDark ? 0.7 : 0.4), .black.opacity(isDark ? 0.4 : 0.15)],
+                        colors: [Color(.fieldWellBorderTop), Color(.fieldWellBorderBottom)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
             }
             .background {
-                well.fill(.white.opacity(isDark ? 0.08 : 0.8)).offset(y: 1)
+                well.fill(Color(.fieldWellHighlight)).offset(y: 1)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -276,6 +268,10 @@ private struct ClassicFieldShelf: ViewModifier {
                 ClassicShelf().ignoresSafeArea(edges: .bottom)
             }
     }
+}
+
+extension ButtonStyle where Self == ClassicFieldButtonStyle {
+    package static var classicField: ClassicFieldButtonStyle { ClassicFieldButtonStyle() }
 }
 
 /// Twitter 4.x's tab icons: embossed grey, and blue with a glow when selected.

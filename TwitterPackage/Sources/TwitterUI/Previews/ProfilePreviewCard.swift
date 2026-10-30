@@ -42,7 +42,7 @@ package struct ProfilePreviewCard: View {
                 HStack(alignment: .bottom) {
                     ProfilePreviewAvatar(user: user, size: avatarSize)
                         .padding(3)
-                        .background(.background, in: .rect(cornerRadius: Avatar.cornerRadius + 3))
+                        .background(.background, in: .rect(cornerRadius: Avatar.cornerRadius(forSize: avatarSize) + 3))
 
                     Spacer(minLength: 0)
 
@@ -91,7 +91,7 @@ private struct ProfilePreviewAvatar: View {
             Image("AvatarPlaceholder", bundle: .module)
                 .resizable()
                 .frame(width: size, height: size)
-                .clipShape(.rect(cornerRadius: Avatar.cornerRadius))
+                .clipShape(.rect(cornerRadius: Avatar.cornerRadius(forSize: size)))
         }
     }
 }

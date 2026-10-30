@@ -23,13 +23,13 @@ struct ProfileHeader: View {
                     Avatar(user: user, size: avatarSize - 8)
                         .opensInLightbox(
                             user.avatarMedia,
-                            cornerRadius: Avatar.cornerRadius,
+                            cornerRadius: Avatar.cornerRadius(forSize: avatarSize - 8),
                             label: "Profile photo"
                         )
                         .padding(4)
                         .background(
                             .background,
-                            in: .rect(cornerRadius: Avatar.cornerRadius + 4)
+                            in: .rect(cornerRadius: Avatar.cornerRadius(forSize: avatarSize - 8) + 4)
                         )
                         .alignmentGuide(.bottom) { $0[VerticalAlignment.center] }
                         .padding(.leading, 16)

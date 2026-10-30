@@ -103,10 +103,12 @@ private struct Letterpress: ViewModifier {
 /// its bird (`emboss-bird`): a faint fill, shaded along its top inside edge, with the page's light catching the lip
 /// below it.
 package struct EndOfTimeline: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 34
+
     package init() {}
 
     package var body: some View {
-        DebossedGlyph(systemName: "fleuron.fill", size: 34)
+        DebossedGlyph(systemName: "fleuron.fill", size: size)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 40)
             .accessibilityLabel("End of timeline")
