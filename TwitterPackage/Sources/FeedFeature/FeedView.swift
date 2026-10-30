@@ -91,7 +91,7 @@ private struct NewPostsButton: View {
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, 6)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.classicProminent)
         .sensoryFeedback(.increase, trigger: count)
     }
 }

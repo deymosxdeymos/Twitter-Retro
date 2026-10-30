@@ -14,7 +14,7 @@ struct FeedFooter: View {
                     Text(errorMessage)
                 } actions: {
                     Button("Try Again") { store.send(.retryButtonTapped) }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.classic)
                 }
             } else if store.isLoading {
                 ProgressView()

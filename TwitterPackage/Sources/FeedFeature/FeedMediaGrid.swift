@@ -51,6 +51,7 @@ private struct GridGeometry: Equatable {
 
     init(proxy: GeometryProxy) {
         width = proxy.size.width
+        guard #available(iOS 27.1, *) else { return }
         let division = proxy.reservedRegions(kind: .division, options: .includeInactive)
             .first { $0.frame.height > $0.frame.width }
         if let division, division.frame.minX > 0, division.frame.maxX < width {

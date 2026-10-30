@@ -310,10 +310,12 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
             self?.applyColumnLayout()
         }
 
-        view.addInteraction(
-            UIHingeInteraction { [weak self] _, _ in
-                self?.foldDidChange()
-            })
+        if #available(iOS 27.1, *) {
+            view.addInteraction(
+                UIHingeInteraction { [weak self] _, _ in
+                    self?.foldDidChange()
+                })
+        }
 
         registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: Self, _) in
             // A gesture under way belongs to the other mode: cancel it (its release then does nothing).
@@ -332,10 +334,12 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
         }
         // Folding and unfolding can move the vertical bar (or take it away) a beat after the size class changes, with
         // no layout pass of ours to follow: the focused column's buttons go to it, or back to the column, right away.
-        registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (self: Self, _) in
-            guard !self.isRunningColumnTransition else { return }
-            self.updateVerticalBarItems()
-            self.view.setNeedsLayout()
+        if #available(iOS 27.1, *) {
+            registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (self: Self, _) in
+                guard !self.isRunningColumnTransition else { return }
+                self.updateVerticalBarItems()
+                self.view.setNeedsLayout()
+            }
         }
         NotificationCenter.default.addObserver(
             self, selector: #selector(settingsDidChange), name: ColumnSettings.didChange, object: nil)
@@ -539,6 +543,7 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
             }
             if let debugFold { return debugFold }
         #endif
+        guard #available(iOS 27.1, *) else { return nil }
         guard
             let region = view.reservedRegions(kind: .division).first(where: {
                 $0.isActive && $0.frame.height > $0.frame.width
@@ -1819,7 +1824,9 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
                 })
             item.identifier = template.identifier
             item.accessibilityLabel = template.title
-            item.axisBehavior = .verticalPreferred
+            if #available(iOS 27.1, *) {
+                item.axisBehavior = .verticalPreferred
+            }
             return item
         }
     }
@@ -1852,7 +1859,8 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
 
     /// Whether the Duo's vertical bar carries the focused column's bar buttons (so columns' own bars show none).
     package var hostsColumnBarItemsInVerticalBar: Bool {
-        isColumnar && settings.verticalBarItems && traitCollection.verticalBarEdge != .unspecified
+        guard #available(iOS 27.1, *) else { return false }
+        return isColumnar && settings.verticalBarItems && traitCollection.verticalBarEdge != .unspecified
     }
 
     // MARK: Gestures

@@ -211,8 +211,8 @@ struct ColumnScreen<Content: View>: View {
 
     private var screen: some View {
         content
-            // Titles sit at the leading edge, never centered.
-            .toolbarTitleAlignment(.leading)
+            .classicTitleBar()
+            .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .environment(\.columnBarPlacement, chrome.placement)
             .toolbar {
                 // In the root's own bar; while a column is focused, in iPhone Duo's vertical bar with its other buttons.
@@ -227,17 +227,13 @@ struct ColumnScreen<Content: View>: View {
                                 Label("Drafts", twitterIcon: .drafts)
                             }
                         } label: {
-                            Label {
-                                Text("New Tweet")
-                            } icon: {
-                                TwitterIcon.compose.image
-                            }
+                            ClassicGlyphLabel("New Tweet", glyph: .compose)
                         } primaryAction: {
                             stack.send(.composeButtonTapped)
                         }
-                        .buttonStyle(.glassProminent)
+                        .buttonStyle(.classicBar(isOnSideBar: false))
                     }
-                    .axisBehavior(.verticalPreferred)
+                    .sharedBackgroundVisibility(.hidden)
                 }
             }
     }

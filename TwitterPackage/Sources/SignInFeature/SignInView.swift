@@ -28,7 +28,7 @@ package struct SignInView: View {
                         Text(errorMessage)
                     } actions: {
                         Button("Try Again") { store.send(.retryButtonTapped) }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.classicProminent)
                     }
                     .background(.background)
                 } else if store.isSigningIn {

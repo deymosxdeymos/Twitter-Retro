@@ -5,8 +5,7 @@ import TweetEngagement
 import TwitterUI
 
 package struct TweetRow: View {
-    /// The corner dog-ear on liked and Retweeted posts: off for now.
-    private static let showsDogEar = false
+    private static let showsDogEar = true
 
     let item: FeedTweet
     let engagement: Engagement
@@ -15,6 +14,7 @@ package struct TweetRow: View {
     let store: StoreOf<FeedFeature>
     var isFocused = false
     @Environment(\.tweetMetrics) private var metrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @SharedReader(.postRowStyle) private var style
 
     private var tweet: Tweet { item.tweet }
@@ -62,8 +62,8 @@ package struct TweetRow: View {
                         .transition(.scale(scale: 0, anchor: .topTrailing))
                 }
             }
-            .animation(.spring(duration: 0.3, bounce: 0.35), value: engagement.like.isOn)
-            .animation(.spring(duration: 0.3, bounce: 0.35), value: engagement.repost.isOn)
+            .animation(reduceMotion ? nil : .spring(duration: 0.3, bounce: 0.35), value: engagement.like.isOn)
+            .animation(reduceMotion ? nil : .spring(duration: 0.3, bounce: 0.35), value: engagement.repost.isOn)
         }
         // Opaque, so the post lifted for its context menu isn't see-through. Twitter's pale blue while unread.
         .background(item.isUnread ? AnyShapeStyle(.twitterUnread) : AnyShapeStyle(.background))

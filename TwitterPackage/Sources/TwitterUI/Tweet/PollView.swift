@@ -24,7 +24,7 @@ package struct PollView: View {
             // X rejects duplicate choices, so the label is a stable identity.
             ForEach(poll.choices.enumerated(), id: \.element.label) { index, choice in
                 if let vote, poll.canVote(now: .now) {
-                    // Twitter's outlined choices, before you've voted.
+                    // Twitter 4.x's pill buttons, before you've voted.
                     Button {
                         vote(index)
                     } label: {
@@ -32,9 +32,7 @@ package struct PollView: View {
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity, minHeight: 32)
                     }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-                    .tint(.accentColor)
+                    .buttonStyle(.classic)
                 } else {
                     PollChoiceRow(
                         choice: choice,

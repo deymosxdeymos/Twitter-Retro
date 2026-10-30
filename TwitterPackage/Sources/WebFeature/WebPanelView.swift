@@ -58,7 +58,6 @@ package struct WebPanelView: View {
             }
             .disabled(page.backForwardList.forwardList.isEmpty)
         }
-        .axisBehavior(.verticalPreferred)
 
         ToolbarItem(placement: inVerticalBar ? .bottomBar : .topBarTrailing) {
             if page.isLoading {
@@ -67,7 +66,6 @@ package struct WebPanelView: View {
                 Button("Reload", twitterIcon: .refresh) { page.reload() }
             }
         }
-        .axisBehavior(.verticalPreferred)
     }
 
     private func reportPage(_ page: WebPage) {

@@ -27,8 +27,10 @@ package struct ColumnMenuToolbarItem<Items: View>: ToolbarContent {
                 } label: {
                     Label(title, twitterIcon: icon)
                 }
+                .menuStyle(.button)
+                .buttonStyle(.classicBar(isOnSideBar: false))
             }
-            .axisBehavior(.verticalPreferred)
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 }
@@ -44,18 +46,7 @@ package struct FollowButton: View {
     }
 
     package var body: some View {
-        Group {
-            if isFollowing {
-                Button("Following", action: action)
-                    .buttonStyle(.bordered)
-            } else {
-                Button("Follow", action: action)
-                    .buttonStyle(.borderedProminent)
-            }
-        }
-        .buttonBorderShape(.capsule)
-        .font(.subheadline.weight(.bold))
-        .sensoryFeedback(.success, trigger: isFollowing)
+        ClassicFollowButton(isFollowing: isFollowing, action: action)
     }
 }
 
@@ -68,15 +59,9 @@ package struct DetailActionBar<Content: View>: View {
     }
 
     package var body: some View {
-        HStack(spacing: 0) {
-            ForEach(subviews: content) { action in
-                action.frame(maxWidth: .infinity)
-            }
+        ClassicDetailActionBar {
+            content
         }
-        .environment(\.engagementIconSize, 22)
-        .frame(minHeight: 44)
-        .overlay(alignment: .top) { Divider() }
-        .overlay(alignment: .bottom) { Divider() }
     }
 }
 

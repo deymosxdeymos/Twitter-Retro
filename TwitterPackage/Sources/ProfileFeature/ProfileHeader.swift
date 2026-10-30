@@ -18,18 +18,18 @@ struct ProfileHeader: View {
             Banner(url: user.bannerURL)
                 .opensInLightbox(user.bannerMedia, cornerRadius: 0, label: "Header photo")
                 .overlay(alignment: .bottomLeading) {
-                    // The ring is a background circle around a smaller avatar, so no
-                    // stroke sits over the clipped image's antialiased edge.
+                    // The ring is a background around a smaller avatar, so no stroke
+                    // sits over the clipped image's antialiased edge.
                     Avatar(user: user, size: avatarSize - 8)
                         .opensInLightbox(
                             user.avatarMedia,
-                            cornerRadius: (avatarSize - 8) / 2,
+                            cornerRadius: Avatar.cornerRadius,
                             label: "Profile photo"
                         )
                         .padding(4)
                         .background(
                             .background,
-                            in: .circle
+                            in: .rect(cornerRadius: Avatar.cornerRadius + 4)
                         )
                         .alignmentGuide(.bottom) { $0[VerticalAlignment.center] }
                         .padding(.leading, 16)
@@ -77,7 +77,7 @@ struct ProfileHeader: View {
                 if !isViewer {
                     if user.isBlocking {
                         Button("Unblock") { store.send(.blockButtonTapped) }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.classic)
                     } else if !user.blocksViewer {
                         FollowButton(isFollowing: user.isFollowing) { store.send(.followButtonTapped) }
                     }

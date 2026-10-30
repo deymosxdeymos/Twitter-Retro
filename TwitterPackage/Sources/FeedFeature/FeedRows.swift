@@ -91,6 +91,7 @@ private struct ShowMoreRow: View {
                 }
 
                 Text(cursor.label)
+                    .letterpress()
             }
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.secondary)

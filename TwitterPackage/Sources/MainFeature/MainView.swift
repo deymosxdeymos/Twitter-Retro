@@ -21,9 +21,22 @@ package struct MainView: View {
     }
 
     package var body: some View {
-        MainTabs(store: store, selection: store.selectedTab, unreadNotifications: store.unreadNotifications)
-            // The tab bar controller keeps its tabs clear of the bars itself.
-            .ignoresSafeArea()
+        VStack(spacing: 0) {
+            MainTabs(store: store, selection: store.selectedTab, unreadNotifications: store.unreadNotifications)
+                .ignoresSafeArea(.container, edges: .top)
+
+            ClassicTabBar(
+                tabs: [
+                    ClassicSidebarTab("Home", icon: .home, id: MainFeature.Tab.home),
+                    ClassicSidebarTab("Notifications", icon: .at, id: .notifications, badgeCount: store.unreadNotifications),
+                    ClassicSidebarTab("Bookmarks", icon: .bookmark, id: .bookmarks),
+                    ClassicSidebarTab("Profile", icon: .profile, id: .profile),
+                    ClassicSidebarTab("Explore", icon: .hash, id: .explore)
+                ],
+                selection: $store.selectedTab,
+                reselect: { tabStack($0).send(.tabReselected) }
+            )
+        }
             .sheet(item: $store.scope(state: \.compose, action: \.compose)) { composeStore in
                 ComposeView(store: composeStore)
             }
@@ -40,6 +53,15 @@ package struct MainView: View {
             .task { await store.send(.task).finish() }
     }
 
+    private func tabStack(_ tab: MainFeature.Tab) -> StoreOf<TabStack> {
+        switch tab {
+        case .bookmarks: store.scope(state: \.bookmarks, action: \.bookmarks)
+        case .explore: store.scope(state: \.explore, action: \.explore)
+        case .home: store.scope(state: \.home, action: \.home)
+        case .notifications: store.scope(state: \.notifications, action: \.notifications)
+        case .profile: store.scope(state: \.profile, action: \.profile)
+        }
+    }
 }
 
 /// The tabs, in UIKit's tab bar controller (iPhone Duo puts its bar in the vertical bar). Each tab is its stack's
@@ -58,6 +80,7 @@ private struct MainTabs: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UITabBarController {
         let controller = MainTabBarController()
         controller.delegate = context.coordinator
+        controller.setTabBarHidden(true, animated: false)
         // As Twitter's: selected and not, the items are the text color; only the glyph's fill tells them apart.
         controller.tabBar.tintColor = .twitterPrimary
         controller.tabBar.unselectedItemTintColor = .twitterPrimary
@@ -74,6 +97,7 @@ private struct MainTabs: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ controller: UITabBarController, context: Context) {
+        controller.setTabBarHidden(true, animated: false)
         context.coordinator.select(selection, in: controller)
         controller.tab(forIdentifier: MainFeature.Tab.notifications.rawValue)?.badgeValue =
             unreadNotifications > 0 ? unreadNotifications.formatted() : nil
@@ -148,6 +172,16 @@ private struct MainTabs: UIViewControllerRepresentable {
 private final class MainTabBarController: UITabBarController {
     var compose: () -> Void = {}
     var selectTab: (MainFeature.Tab) -> Void = { _ in }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        for child in children {
+            let reserved = child.view.safeAreaInsets.bottom - child.additionalSafeAreaInsets.bottom
+                - view.safeAreaInsets.bottom
+            let inset = -max(reserved, 0)
+            if child.additionalSafeAreaInsets.bottom != inset { child.additionalSafeAreaInsets.bottom = inset }
+        }
+    }
 
     override var keyCommands: [UIKeyCommand]? {
         let newTweet = UIKeyCommand(

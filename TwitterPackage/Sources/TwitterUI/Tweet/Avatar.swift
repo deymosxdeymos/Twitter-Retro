@@ -2,6 +2,8 @@ import Models
 import SwiftUI
 
 package struct Avatar: View {
+    package static let cornerRadius: CGFloat = 5
+
     let url: URL?
     let size: CGFloat
     let decodeSize: CGFloat
@@ -19,8 +21,8 @@ package struct Avatar: View {
             Image("AvatarPlaceholder", bundle: .module).resizable()
         }
         .frame(width: size, height: size)
-        .clipShape(.circle)
-        .overlay { Circle().strokeBorder(.avatarHairline, lineWidth: 0.5) }
+        .clipShape(.rect(cornerRadius: Self.cornerRadius))
+        .overlay { RoundedRectangle(cornerRadius: Self.cornerRadius).strokeBorder(.avatarHairline, lineWidth: 0.5) }
         .accessibilityHidden(true)
     }
 }

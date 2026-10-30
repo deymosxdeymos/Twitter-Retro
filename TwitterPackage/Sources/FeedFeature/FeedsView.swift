@@ -2,6 +2,7 @@ import ComposableArchitecture
 import Models
 import Routing
 import SwiftUI
+import TwitterUI
 
 package struct FeedsView<Header: View>: View {
     @Bindable var store: StoreOf<FeedsFeature>
@@ -50,12 +51,10 @@ private struct FeedSwitcher: View {
     @Binding var selection: FeedSource
 
     var body: some View {
-        Picker("Feed", selection: $selection.animation(.snappy)) {
-            ForEach(feeds, id: \.self) { feed in
-                Text(feed.title)
-            }
+        ClassicSegmentedControl(feeds, selection: $selection) { feed in
+            Text(feed.title)
         }
-        .pickerStyle(.segmented)
+        .accessibilityLabel("Feed")
         // Over the readable column on a wide display instead of stretching across it.
         .frame(maxWidth: 680)
     }

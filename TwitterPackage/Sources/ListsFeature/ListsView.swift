@@ -19,7 +19,7 @@ package struct ListsView: View {
                     Text(errorMessage)
                 } actions: {
                     Button("Try Again") { store.send(.retryButtonTapped) }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.classic)
                 }
             } else if store.hasLoaded, store.lists.isEmpty {
                 ContentUnavailableView("No Lists yet", twitterIcon: .lists)

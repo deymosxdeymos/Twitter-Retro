@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import FeedFeature
 import SwiftUI
+import TwitterUI
 import UserListFeature
 
 /// The tab on screen, with Twitter's Top, Latest, People and Media tabs over it.
@@ -20,14 +21,13 @@ struct SearchResultsView: View {
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Picker("Results", selection: $store.tab.animation(.snappy)) {
-                    ForEach(SearchResults.Tab.allCases, id: \.self) { tab in
-                        Text(tab.title)
-                    }
+                ClassicSegmentedControl(SearchResults.Tab.allCases, selection: $store.tab.animation(.snappy)) { tab in
+                    Text(tab.title)
                 }
-                .pickerStyle(.segmented)
+                .accessibilityLabel("Results")
                 .frame(maxWidth: 360)
             }
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 }

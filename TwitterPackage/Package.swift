@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "TwitterPackage",
     platforms: [
-        .iOS("27.2")
+        .iOS("27.0")
     ],
     products: [
         .library(name: "AppFeature", targets: ["AppFeature"]),

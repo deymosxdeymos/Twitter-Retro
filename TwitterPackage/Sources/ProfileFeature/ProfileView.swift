@@ -26,7 +26,7 @@ package struct ProfileView: View {
                     Text(errorMessage)
                 } actions: {
                     Button("Try Again") { store.send(.task) }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.classic)
                 }
             } else {
                 ProgressView()

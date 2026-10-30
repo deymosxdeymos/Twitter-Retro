@@ -39,26 +39,19 @@ package struct MediaViewer: View {
 
     package var body: some View {
         NavigationStack {
-            ArrangementView {
-                ZStack {
-                    MediaCaption(
-                        media: media,
-                        selection: selection,
-                        playback: media.first { $0.id == selection }.flatMap(playbacks.playback(for:)),
-                        showsChrome: showsChrome,
-                        tweet: tweet
-                    )
-                }
-                .overlayArrangementEdge(.trailing)
-                .overlayArrangementEdge(.bottom)
-            } secondary: {
+            ZStack {
                 MediaPager(media: media, selection: $selection, isZoomed: $isZoomed, playbacks: playbacks) {
                     withAnimation(.snappy) { showsChrome.toggle() }
                 }
-                .overlayArrangementEdge(.trailing)
-                .overlayArrangementEdge(.bottom)
+
+                MediaCaption(
+                    media: media,
+                    selection: selection,
+                    playback: media.first { $0.id == selection }.flatMap(playbacks.playback(for:)),
+                    showsChrome: showsChrome,
+                    tweet: tweet
+                )
             }
-            .arrangementViewStyle(.overlay)
             .background(.mediaBackdrop, ignoresSafeAreaEdges: .all)
             .toolbarVisibility(showsChrome ? .automatic : .hidden, for: .navigationBar)
             .toolbar {
@@ -76,7 +69,6 @@ package struct MediaViewer: View {
                 }
             }
         }
-        .toolbarVerticalBehavior(.disabled)
         // A mention or link in the caption opens where the post is (a column, a pushed profile), so the viewer gets
         // out of the way first rather than opening it behind itself.
         .environment(
@@ -168,9 +160,7 @@ private struct MediaCaption: View {
     let playback: VideoPlayback?
     let showsChrome: Bool
     let tweet: Tweet?
-    @Environment(\.overlayArrangementZIndex) private var zIndex
-
-    private var isLayered: Bool { zIndex > 0 }
+    private let isLayered = true
     private var index: Int? { media.firstIndex { $0.id == selection } }
 
     var body: some View {

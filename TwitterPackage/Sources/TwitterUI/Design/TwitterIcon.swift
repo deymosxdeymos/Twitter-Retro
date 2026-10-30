@@ -113,8 +113,24 @@ package enum TwitterIcon: String, Sendable {
     case views = "bar_chart"
     case warningStroke = "warning_stroke"
 
+    private var classicAsset: String? {
+        switch self {
+        case .heart: "ActionFavoriteOn"
+        case .heartStroke: "ActionFavorite"
+        case .reply, .replyStroke: "ActionReply"
+        case .repost: "ActionRetweetOn"
+        case .repostStroke: "ActionRetweet"
+        case .share: "ActionShare"
+        default: nil
+        }
+    }
+
     package var image: Image {
-        Image(decorative: rawValue, bundle: .module).renderingMode(isTemplate ? .template : .original)
+        if let classicAsset {
+            Image(decorative: classicAsset, bundle: .module).renderingMode(.original)
+        } else {
+            Image(decorative: rawValue, bundle: .module).renderingMode(isTemplate ? .template : .original)
+        }
     }
 
     /// For UIKit's bars.

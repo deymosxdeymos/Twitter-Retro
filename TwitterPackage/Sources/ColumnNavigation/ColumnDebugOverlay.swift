@@ -32,13 +32,15 @@ final class ColumnDebugOverlay: UIView {
     override func draw(_ rect: CGRect) {
         guard let context = UIGraphicsGetCurrentContext() else { return }
 
-        for region in reservedRegions(kind: .division, options: .includeInactive) {
-            UIColor(resource: .debugDivision).setFill()
-            context.fill(region.frame)
-        }
-        for region in reservedRegions(kind: .occlusion, options: .includeInactive) {
-            UIColor(resource: region.isActive ? .debugOcclusionActive : .debugOcclusionInactive).setFill()
-            context.fill(region.frame)
+        if #available(iOS 27.1, *) {
+            for region in reservedRegions(kind: .division, options: .includeInactive) {
+                UIColor(resource: .debugDivision).setFill()
+                context.fill(region.frame)
+            }
+            for region in reservedRegions(kind: .occlusion, options: .includeInactive) {
+                UIColor(resource: region.isActive ? .debugOcclusionActive : .debugOcclusionInactive).setFill()
+                context.fill(region.frame)
+            }
         }
 
         for (index, frame) in columnFrames.enumerated() {

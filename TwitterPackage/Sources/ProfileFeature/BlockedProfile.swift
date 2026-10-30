@@ -30,7 +30,7 @@ struct BlockedProfile: View {
                         )
                     } actions: {
                         Button("View Tweets") { store.send(.viewPostsButtonTapped) }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.classic)
                     }
                 }
             }
