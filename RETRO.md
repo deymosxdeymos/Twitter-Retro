@@ -13,6 +13,7 @@ The current reducers, API client, database, text handling, media playback and co
 - Laid out for a normal iPhone. iPhone Duo's vertical bar, fold-aware layouts and leading title alignment need iOS 27.1/27.2, so they are dropped or behind availability checks. `ClassicSidebar` is kept but unused.
 - Rounded-square avatars (including the profile header's ring and the profile preview), bitmap action icons, gold favorite stars and corner dog-ears.
 - A standard media overlay instead of the fold-aware arrangement.
+- Settings → Display and Sound → Appearance: System, Light or Dark, switching with a short crossfade (instant with Reduce Motion).
 - The bottom bar calls the current tab actions. Reselecting a tab still returns to its root or scrolls it to the top. Holding Compose opens a menu with Drafts. The Notifications tab keeps its unread badge.
 
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.

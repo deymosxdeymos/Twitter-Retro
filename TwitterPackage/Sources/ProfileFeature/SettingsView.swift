@@ -11,6 +11,7 @@ struct SettingsView: View {
     @Shared(.postRowStyle) private var postRowStyle
     @Shared(.appStorage(MediaAutoplay.settingKey)) private var autoplaysMedia = false
     @Shared(.appStorage(ClassicSound.settingKey)) private var playsSounds = true
+    @Shared(.appStorage(Appearance.settingKey)) private var appearance = Appearance.system
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -41,6 +42,12 @@ struct SettingsView: View {
                     Picker("Tweet Layout", selection: Binding($postRowStyle)) {
                         ForEach(PostRowStyle.allCases, id: \.self) { style in
                             Text(style.title)
+                        }
+                    }
+
+                    Picker("Appearance", selection: Binding($appearance)) {
+                        ForEach(Appearance.allCases, id: \.self) { appearance in
+                            Text(appearance.title)
                         }
                     }
 
