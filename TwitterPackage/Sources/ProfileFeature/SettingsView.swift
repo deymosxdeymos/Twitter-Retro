@@ -87,6 +87,7 @@ struct SettingsView: View {
                 #endif
             }
             .formStyle(.classicGrouped)
+            .background { HatchedBackdrop() }
             .classicTitleBar()
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .navigationTitle("Settings")
