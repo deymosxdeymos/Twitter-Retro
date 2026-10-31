@@ -45,6 +45,10 @@ package struct MainView: View {
                 #if DEBUG
                     applyLaunchArguments()
                 #endif
+                if NotificationTap.consume() { store.selectedTab = .notifications }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NotificationTap.didTap)) { _ in
+                if NotificationTap.consume() { store.selectedTab = .notifications }
             }
             .onChange(of: store.selectedTab) { savedTab = store.selectedTab }
             .onChange(of: scenePhase) { old, new in

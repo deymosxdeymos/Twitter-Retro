@@ -9,7 +9,9 @@ import TwitterUI
 /// The app's scenes: the main window, plus standalone windows for a post, profile, or search that people open beside
 /// it on iPhone Duo's inner display (the system only offers new windows where there's room for them).
 public struct TwitterScenes: Scene {
-    public init() {}
+    public init() {
+        NotificationTapDelegate.install()
+    }
 
     public var body: some Scene {
         WindowGroup {

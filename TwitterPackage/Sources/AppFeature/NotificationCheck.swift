@@ -50,7 +50,7 @@ enum NotificationCheck {
             }
         } else {
             await post(
-                id: "unread-\(unread)",
+                id: UUID().uuidString,
                 body: String(localized: "You have \(arrived) new notifications.")
             )
         }
@@ -66,6 +66,30 @@ enum NotificationCheck {
         content.sound = .default
         try? await UNUserNotificationCenter.current().add(
             UNNotificationRequest(identifier: id, content: content, trigger: nil))
+    }
+}
+
+@MainActor
+final class NotificationTapDelegate: NSObject, @preconcurrency UNUserNotificationCenterDelegate {
+    static let shared = NotificationTapDelegate()
+
+    static func install() {
+        UNUserNotificationCenter.current().delegate = shared
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        NotificationTap.record()
+        completionHandler()
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
     }
 }
 
