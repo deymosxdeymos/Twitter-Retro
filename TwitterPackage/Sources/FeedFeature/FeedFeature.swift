@@ -494,6 +494,14 @@ package struct FeedFeature {
                     state.items.insert(item, at: position)
                     position += 1
                 }
+                if cursor.id.hasPrefix("conversationthread"), index > 0, position > index,
+                    case .tweet(var above) = state.items[index - 1], case .tweet(var first) = state.items[index]
+                {
+                    above.connectsBelow = true
+                    first.connectsAbove = true
+                    state.items[index - 1] = .tweet(above)
+                    state.items[index] = .tweet(first)
+                }
                 // A timeline gap that's still open after this page gets a new gap row where it now starts.
                 if cursor.id.hasPrefix(TimelineMerge.gapPrefix), !reachedExisting, let next = page.bottomCursor {
                     state.items.insert(.showMore(TimelineMerge.gap(cursor: next)), at: position)

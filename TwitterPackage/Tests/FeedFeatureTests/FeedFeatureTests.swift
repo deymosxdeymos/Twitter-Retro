@@ -255,6 +255,45 @@ struct FeedFeatureTests {
     }
 
     @Test
+    func moreOfAConversationCarriesOnItsThreadLine() async {
+        let first = Tweet.mocks[0]
+        let second = Tweet.mocks[1]
+        let third = Tweet.mocks[2]
+        let cursor = ShowMoreCursor(id: "conversationthread-1-cursor-showmore-3", cursor: "more")
+        func joined(_ tweet: Tweet, above: Bool, below: Bool) -> FeedItem {
+            var item = FeedTweet(tweet: tweet)
+            item.connectsAbove = above
+            item.connectsBelow = below
+            return .tweet(item)
+        }
+        var state = FeedFeature.State(
+            source: .thread(tweetID: first.id),
+            items: [
+                joined(first, above: false, below: true), joined(second, above: true, below: false), .showMore(cursor)
+            ]
+        )
+        state.hasLoaded = true
+        let store = TestStore(initialState: state) {
+            FeedFeature()
+        } withDependencies: {
+            $0[TwitterClient.self].feed = { _, _ in
+                FeedPage(items: [.tweet(FeedTweet(tweet: third))], bottomCursor: nil, topCursor: nil)
+            }
+        }
+
+        await store.send(.showMoreButtonTapped(cursor)) {
+            $0.loadingShowMoreIDs = [FeedItem.showMore(cursor).id]
+        }
+        await store.receive(\.showMoreResponse) {
+            $0.loadingShowMoreIDs = []
+            $0.items = [
+                joined(first, above: false, below: true), joined(second, above: true, below: true),
+                joined(third, above: true, below: false)
+            ]
+        }
+    }
+
+    @Test
     func replyThreadJoinsItsConversationAndLoadsWhatsAboveIt() async {
         let root = Tweet.mocks[0]
         let parent = Tweet.mocks[1]
