@@ -12,6 +12,7 @@ package struct SearchFeature {
         @Shared(.recentSearches) var recentSearches
         @Presents var results: SearchResults.State?
         var submittedQuery: String?
+        var suggestions: [User] = []
         /// What's trending, shown before anything's searched.
         var trends: [Trend] = []
         var trendsError: String?
@@ -36,12 +37,17 @@ package struct SearchFeature {
         case results(PresentationAction<SearchResults.Action>)
         case resultsCleared(query: String)
         case searchSubmitted
+        case suggestionTapped(User)
+        case suggestionsResponse(query: String, Result<[User], any Error>)
         case task
         case trendTapped(Trend)
         case trendsResponse(Result<[Trend], any Error>)
     }
 
     @Dependency(TwitterClient.self) var client
+    @Dependency(\.continuousClock) var clock
+
+    private enum CancelID { case suggestions }
 
     package init() {}
 
@@ -54,7 +60,15 @@ package struct SearchFeature {
                     state.results = nil
                     state.submittedQuery = nil
                 }
-                return .none
+                guard let query = state.suggestionQuery else {
+                    state.suggestions = []
+                    return .cancel(id: CancelID.suggestions)
+                }
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(250))
+                    await send(.suggestionsResponse(query: query, Result { try await client.typeahead(query) }))
+                }
+                .cancellable(id: CancelID.suggestions, cancelInFlight: true)
 
             case .binding, .delegate:
                 return .none
@@ -81,6 +95,7 @@ package struct SearchFeature {
                 let query = state.query.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !query.isEmpty, query != state.submittedQuery else { return .none }
                 state.submittedQuery = query
+                state.suggestions = []
                 state.$recentSearches.withLock {
                     $0.removeAll { $0.caseInsensitiveCompare(query) == .orderedSame }
                     $0.insert(query, at: 0)
@@ -88,7 +103,16 @@ package struct SearchFeature {
                 }
                 // Gone first, so the old results' effects are cancelled before the new ones start.
                 state.results = nil
-                return .send(.resultsCleared(query: query))
+                return .merge(.cancel(id: CancelID.suggestions), .send(.resultsCleared(query: query)))
+
+            case .suggestionTapped(let user):
+                state.suggestions = []
+                return .merge(.cancel(id: CancelID.suggestions), .send(.delegate(.open(.profile(user)))))
+
+            case .suggestionsResponse(let query, let result):
+                guard query == state.suggestionQuery else { return .none }
+                state.suggestions = Array(((try? result.get()) ?? []).prefix(6))
+                return .none
 
             case .task:
                 // Only Explore shows them; a search opened from elsewhere starts with its results.
@@ -124,6 +148,13 @@ package struct SearchFeature {
 
 extension SearchFeature.State {
     static let recentSearchLimit = 10
+
+    var suggestionQuery: String? {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty, query != submittedQuery, !query.hasPrefix("#") else { return nil }
+        let handle = query.hasPrefix("@") ? String(query.dropFirst()) : query
+        return handle.isEmpty ? nil : handle
+    }
 }
 
 extension SharedKey where Self == FileStorageKey<[String]>.Default {

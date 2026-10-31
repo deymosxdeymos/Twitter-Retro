@@ -37,6 +37,31 @@ package struct SearchView: View {
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $store.query, prompt: "Search")
+        .searchSuggestions {
+            if store.suggestionQuery != nil {
+                Button {
+                    store.send(.searchSubmitted)
+                } label: {
+                    Label("Search for “\(store.query)”", twitterIcon: .searchStroke)
+                }
+
+                ForEach(store.suggestions) { user in
+                    Button {
+                        store.send(.suggestionTapped(user))
+                    } label: {
+                        HStack(spacing: 10) {
+                            Avatar(user: user, size: 36)
+
+                            AuthorLine(user: user, date: nil, layout: .stacked)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .contentShape(.rect)
+                        .tweetMetrics()
+                    }
+                    .accessibilityLabel("\(user.name), @\(user.screenName)")
+                }
+            }
+        }
         .onSubmit(of: .search) { store.send(.searchSubmitted) }
     }
 }

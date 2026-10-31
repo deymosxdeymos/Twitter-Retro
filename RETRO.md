@@ -17,6 +17,10 @@ The current reducers, API client, database, text handling, media playback and co
 - Settings → Display and Sound → Appearance: a System / Light / Dark segmented control, switching with a short crossfade (instant with Reduce Motion).
 - The bottom bar calls the current tab actions. Reselecting a tab still returns to its root or scrolls it to the top. Holding Compose opens a menu with Drafts. The Notifications tab keeps its unread badge.
 
+## Features beyond upstream
+
+- Search suggests accounts as you type (after a 0.25 s pause, using the existing typeahead endpoint), under a "Search for …" row. Hashtags and already-searched queries aren't looked up.
+
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.
 
 Still system glass: the back button (as in the original retro build), the Retweet / Quote Tweet popover, media overlays, compose and sign-in. On iPhone, links open in Safari's view, so the iPad web panel is unchanged.

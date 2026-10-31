@@ -13,6 +13,7 @@ struct SearchFeatureTests {
         let store = TestStore(initialState: SearchFeature.State(submitting: "swift")) {
             SearchFeature()
         } withDependencies: {
+            $0.continuousClock = TestClock()
             $0[TwitterClient.self].feed = { _, _ in
                 try await Task.sleep(for: .seconds(60))
                 return FeedPage(items: [], bottomCursor: nil, topCursor: nil)
@@ -89,6 +90,8 @@ struct SearchFeatureTests {
     func searchesAreRememberedNewestFirstWithoutRepeats() async {
         let store = TestStore(initialState: SearchFeature.State()) {
             SearchFeature()
+        } withDependencies: {
+            $0.continuousClock = TestClock()
         }
         store.exhaustivity = .off
 
@@ -99,6 +102,49 @@ struct SearchFeatureTests {
         #expect(store.state.recentSearches == ["Swift", "tca"])
         await store.send(.clearRecentSearchesButtonTapped)
         #expect(store.state.recentSearches.isEmpty)
+    }
+
+    @Test
+    func typingSuggestsAccountsAfterAPauseAndATapOpensTheProfile() async {
+        let clock = TestClock()
+        let store = TestStore(initialState: SearchFeature.State()) {
+            SearchFeature()
+        } withDependencies: {
+            $0.continuousClock = clock
+            $0[TwitterClient.self].typeahead = { query in
+                #expect(query == "sam")
+                return [.mock]
+            }
+        }
+
+        await store.send(.binding(.set(\.query, "s"))) {
+            $0.query = "s"
+        }
+        await store.send(.binding(.set(\.query, "@sam"))) {
+            $0.query = "@sam"
+        }
+        await clock.advance(by: .milliseconds(250))
+        await store.receive(\.suggestionsResponse) {
+            $0.suggestions = [.mock]
+        }
+        await store.send(.suggestionTapped(.mock)) {
+            $0.suggestions = []
+        }
+        await store.receive(\.delegate)
+    }
+
+    @Test
+    func hashtagsAndSubmittedQueriesAreNotLookedUp() async {
+        let store = TestStore(initialState: SearchFeature.State(submitting: "swift")) {
+            SearchFeature()
+        } withDependencies: {
+            $0.continuousClock = TestClock()
+        }
+
+        await store.send(.binding(.set(\.query, "#wwdc"))) {
+            $0.query = "#wwdc"
+        }
+        #expect(SearchFeature.State(submitting: "swift").suggestionQuery == nil)
     }
 
     @Test
