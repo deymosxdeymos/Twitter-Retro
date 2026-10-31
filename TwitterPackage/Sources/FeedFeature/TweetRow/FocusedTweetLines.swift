@@ -87,6 +87,7 @@ struct FocusedTimestampLine: View {
     let date: Date
     let views: Int?
     @Environment(\.tweetMetrics) private var metrics
+    @AppStorage(RetroSettings.showsViewCountsKey) private var showsViewCounts = false
 
     var body: some View {
         HStack(spacing: 4) {
@@ -96,7 +97,7 @@ struct FocusedTimestampLine: View {
 
             Text(date, format: .dateTime.month(.abbreviated).day().year())
 
-            if let views {
+            if showsViewCounts, let views {
                 Text(verbatim: "·")
 
                 Text(

@@ -19,6 +19,10 @@ The current reducers, API client, database, text handling, media playback and co
 
 ## Features beyond upstream
 
+- Settings → Tweets: view counts (off by default; Twitter 4.x had none) and exact counts (12,345 instead of 12.3K).
+- Settings → Ask First: confirm before liking, following or unfollowing, and sending a Tweet.
+- Settings → Privacy: Lock Twitter asks for Face ID or the passcode on launch and on return from the background. Without a passcode set it can't lock, so it doesn't.
+- After "Show more replies", the loaded replies stay joined to the conversation's thread line (an upstream bug, fixed in its own commit).
 - Search suggests accounts as you type (after a 0.25 s pause, using the existing typeahead endpoint), under a "Search for …" row. Hashtags and already-searched queries aren't looked up.
 
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.

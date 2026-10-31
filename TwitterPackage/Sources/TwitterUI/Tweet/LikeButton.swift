@@ -6,6 +6,8 @@ package struct LikeButton: View {
     let count: Int
     let isLiked: Bool
     @Environment(\.tweetMetrics) private var metrics
+    @AppStorage(RetroSettings.confirmsLikesKey) private var confirmsLikes = false
+    @State private var isConfirming = false
 
     package init(isLiked: Bool, count: Int, action: @escaping () -> Void) {
         self.action = action
@@ -14,7 +16,9 @@ package struct LikeButton: View {
     }
 
     package var body: some View {
-        Button(action: action) {
+        Button {
+            if confirmsLikes, !isLiked { isConfirming = true } else { action() }
+        } label: {
             HStack(spacing: 4) {
                 ZStack {
                     if isLiked {
@@ -50,6 +54,10 @@ package struct LikeButton: View {
         .accessibilityLabel(isLiked ? "Unlike" : "Like")
         .accessibilityValue(count.formatted())
         .sensoryFeedback(.selection, trigger: isLiked)
+        .alert("Like this Tweet?", isPresented: $isConfirming) {
+            Button("Like", action: action)
+            Button("Cancel", role: .cancel) {}
+        }
     }
 }
 

@@ -55,6 +55,8 @@ private struct ClassicButton: View {
 package struct ClassicFollowButton: View {
     let action: () -> Void
     let isFollowing: Bool
+    @AppStorage(RetroSettings.confirmsFollowsKey) private var confirmsFollows = false
+    @State private var isConfirming = false
 
     package init(isFollowing: Bool, action: @escaping () -> Void) {
         self.action = action
@@ -62,8 +64,14 @@ package struct ClassicFollowButton: View {
     }
 
     package var body: some View {
-        Button(isFollowing ? "Following" : "Follow", action: action)
-            .buttonStyle(isFollowing ? .classic : .classicProminent)
-            .sensoryFeedback(.success, trigger: isFollowing)
+        Button(isFollowing ? "Following" : "Follow") {
+            if confirmsFollows { isConfirming = true } else { action() }
+        }
+        .buttonStyle(isFollowing ? .classic : .classicProminent)
+        .sensoryFeedback(.success, trigger: isFollowing)
+        .alert(isFollowing ? "Unfollow this account?" : "Follow this account?", isPresented: $isConfirming) {
+            Button(isFollowing ? "Unfollow" : "Follow", role: isFollowing ? .destructive : nil, action: action)
+            Button("Cancel", role: .cancel) {}
+        }
     }
 }

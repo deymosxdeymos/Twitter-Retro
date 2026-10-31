@@ -14,12 +14,13 @@ package struct EngagementBar: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @AppStorage(RetroSettings.showsViewCountsKey) private var showsViewCounts = false
 
     /// Where a column is too narrow for every count, the view count goes first, and in a compact window it never
     /// shows, leaving the room to the actions; the focused post still shows it.
     package var body: some View {
         ViewThatFits(in: .horizontal) {
-            if horizontalSizeClass == .regular, verticalSizeClass == .regular {
+            if showsViewCounts, horizontalSizeClass == .regular, verticalSizeClass == .regular {
                 EngagementBarRow(tweet: tweet, engagement: engagement, store: store, showsViews: true)
             }
 

@@ -1,0 +1,10 @@
+import Foundation
+
+package enum RetroSettings {
+    package static let showsViewCountsKey = "showsViewCounts"
+    package static let showsExactCountsKey = "showsExactCounts"
+    package static let confirmsLikesKey = "confirmsLikes"
+    package static let confirmsFollowsKey = "confirmsFollows"
+    package static let confirmsTweetsKey = "confirmsTweets"
+    package static let locksAppKey = "locksApp"
+}

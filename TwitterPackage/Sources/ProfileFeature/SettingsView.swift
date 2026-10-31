@@ -12,6 +12,12 @@ struct SettingsView: View {
     @Shared(.appStorage(MediaAutoplay.settingKey)) private var autoplaysMedia = false
     @Shared(.appStorage(ClassicSound.settingKey)) private var playsSounds = true
     @Shared(.appStorage(Appearance.settingKey)) private var appearance = Appearance.system
+    @Shared(.appStorage(RetroSettings.showsViewCountsKey)) private var showsViewCounts = false
+    @Shared(.appStorage(RetroSettings.showsExactCountsKey)) private var showsExactCounts = false
+    @Shared(.appStorage(RetroSettings.confirmsLikesKey)) private var confirmsLikes = false
+    @Shared(.appStorage(RetroSettings.confirmsFollowsKey)) private var confirmsFollows = false
+    @Shared(.appStorage(RetroSettings.confirmsTweetsKey)) private var confirmsTweets = false
+    @Shared(.appStorage(RetroSettings.locksAppKey)) private var locksApp = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -60,6 +66,34 @@ struct SettingsView: View {
                     Text("Display and Sound")
                 } footer: {
                     Text("Sounds play as you pull a timeline to refresh, as in Twitter for iPad.")
+                }
+
+                Section {
+                    Toggle("View Counts", isOn: Binding($showsViewCounts))
+
+                    Toggle("Exact Counts", isOn: Binding($showsExactCounts))
+                } header: {
+                    Text("Tweets")
+                } footer: {
+                    Text("Twitter 4.x showed no views. Exact counts read 12,345 instead of 12.3K.")
+                }
+
+                Section {
+                    Toggle("Before Liking", isOn: Binding($confirmsLikes))
+
+                    Toggle("Before Following", isOn: Binding($confirmsFollows))
+
+                    Toggle("Before Tweeting", isOn: Binding($confirmsTweets))
+                } header: {
+                    Text("Ask First")
+                }
+
+                Section {
+                    Toggle("Lock Twitter", isOn: Binding($locksApp))
+                } header: {
+                    Text("Privacy")
+                } footer: {
+                    Text("Asks for Face ID or your passcode when you open Twitter.")
                 }
 
                 Section {

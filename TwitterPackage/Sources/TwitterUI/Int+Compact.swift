@@ -3,7 +3,10 @@ import Foundation
 extension Int {
     /// Twitter's count style: the full number below 10,000 ("1,234"), then K / M / B with one decimal, truncated and
     /// without a trailing ".0" ("12.3K", "123K", "1.2M").
-    package var compact: String { compact(locale: .current) }
+    package var compact: String {
+        UserDefaults.standard.bool(forKey: RetroSettings.showsExactCountsKey)
+            ? formatted(.number) : compact(locale: .current)
+    }
 
     /// ``compact`` in a given locale, which decides the grouping and decimal separators.
     package func compact(locale: Locale) -> String {

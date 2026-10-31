@@ -16,6 +16,7 @@ public struct TwitterScenes: Scene {
             AppView()
                 .limitsImageHeadroom()
                 .appliesAppearance()
+                .appliesAppLock()
         }
 
         WindowGroup("Twitter", for: WindowRoute.self) { $route in
@@ -24,6 +25,7 @@ public struct TwitterScenes: Scene {
                     .id(route)
                     .limitsImageHeadroom()
                     .appliesAppearance()
+                    .appliesAppLock()
                     .asyncImageURLSession(.images)
             } else {
                 ContentUnavailableView("Nothing to Show", twitterIcon: .newWindow)

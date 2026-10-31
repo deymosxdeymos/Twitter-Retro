@@ -18,6 +18,8 @@ package struct ComposeView: View {
     }
     @FocusState private var focusedEditor: Editor?
     @State private var pickedItems: [PhotosPickerItem] = []
+    @AppStorage(RetroSettings.confirmsTweetsKey) private var confirmsTweets = false
+    @State private var isConfirmingTweet = false
 
     package var body: some View {
         NavigationStack {
@@ -95,9 +97,13 @@ package struct ComposeView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Tweet", twitterIcon: .compose, role: .confirm) {
-                        store.send(.postButtonTapped)
+                        if confirmsTweets { isConfirmingTweet = true } else { store.send(.postButtonTapped) }
                     }
                     .disabled(!store.canPost)
+                    .alert("Send this Tweet?", isPresented: $isConfirmingTweet) {
+                        Button("Tweet") { store.send(.postButtonTapped) }
+                        Button("Cancel", role: .cancel) {}
+                    }
                 }
 
             }
