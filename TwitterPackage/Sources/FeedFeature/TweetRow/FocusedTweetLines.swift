@@ -100,7 +100,9 @@ struct FocusedTimestampLine: View {
             Text(date, format: .dateTime.month(.abbreviated).day().year())
 
             if showsClient, let client {
-                Text("via \(client)")
+                Text(verbatim: "·")
+
+                Text(client)
                     .lineLimit(1)
                     .layoutPriority(-1)
             }

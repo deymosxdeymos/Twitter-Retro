@@ -78,7 +78,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Tweets")
                 } footer: {
-                    Text("Twitter 4.x showed no views, and named the app a Tweet came from: via Twitter for iPhone. Exact counts read 12,345 instead of 12.3K.")
+                    Text("Twitter 4.x showed no views, and named the app a Tweet came from, like Twitter for iPhone. Exact counts read 12,345 instead of 12.3K.")
                 }
 
                 Section {
