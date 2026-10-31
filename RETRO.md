@@ -19,7 +19,7 @@ The current reducers, API client, database, text handling, media playback and co
 
 ## Features beyond upstream
 
-- Settings → Tweets: view counts (off by default; Twitter 4.x had none) and exact counts (12,345 instead of 12.3K).
+- Settings → Tweets: view counts (off by default; Twitter 4.x had none), exact counts (12,345 instead of 12.3K), and source labels ("via Twitter for iPhone" under a Tweet, on by default). The source comes from X's `source` field; the mock Tweets say Twitter for iPhone.
 - Settings → Ask First: confirm before liking, following or unfollowing, and sending a Tweet.
 - Settings → Privacy: Lock Twitter asks for Face ID or the passcode on launch and on return from the background. Without a passcode set it can't lock, so it doesn't.
 - After "Show more replies", the loaded replies stay joined to the conversation's thread line (an upstream bug, fixed in its own commit).

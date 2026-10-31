@@ -13,6 +13,16 @@ extension TimelineParser {
         return FeedTweet(id: tweet.id, tweet: tweet)
     }
 
+    static func clientName(from source: String?) -> String? {
+        guard let source else { return nil }
+        var name = source
+        if let open = source.range(of: ">"), let close = source.range(of: "</", range: open.upperBound..<source.endIndex) {
+            name = String(source[open.upperBound..<close.lowerBound])
+        }
+        name = name.replacingOccurrences(of: "&amp;", with: "&").trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? nil : name
+    }
+
     package static func unwrapTweet(_ result: JSON) -> JSON? {
         switch result["__typename"] as? String {
         case "TweetWithVisibilityResults": return result["tweet"] as? JSON
@@ -92,6 +102,7 @@ extension TimelineParser {
         tweet.isReposted = legacy["retweeted"] as? Bool ?? false
         tweet.isBookmarked = legacy["bookmarked"] as? Bool ?? false
         tweet.conversationID = legacy["conversation_id_str"] as? String
+        tweet.client = clientName(from: (result["source"] as? String) ?? (legacy["source"] as? String))
         tweet.media = mediaEntities.compactMap(media(from:))
         tweet.card = card(from: result["card"] as? JSON)
 

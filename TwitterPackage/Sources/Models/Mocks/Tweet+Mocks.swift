@@ -7,7 +7,7 @@ extension Tweet {
         text: String,
         secondsAgo: TimeInterval = 60
     ) -> Tweet {
-        Tweet(
+        var tweet = Tweet(
             id: id,
             author: author,
             text: text,
@@ -17,6 +17,8 @@ extension Tweet {
             likeCount: 560,
             viewCount: 12_345
         )
+        tweet.client = "Twitter for iPhone"
+        return tweet
     }
 
     /// Two photos, for the media viewer (`--mock-media`).

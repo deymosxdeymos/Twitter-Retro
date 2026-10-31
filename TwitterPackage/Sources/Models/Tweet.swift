@@ -24,6 +24,7 @@ package struct Tweet: Identifiable, Hashable, Codable, Sendable {
     /// The language Twitter detected (BCP 47, "en", "ja"); `nil` or `und` when it couldn't tell.
     package var language: String?
     package var conversationID: String?
+    package var client: String?
     /// Bold/italic ranges of a long post's text.
     package var styles: [TextStyleRange] = []
     /// Hashtags and cashtags (with their `#`/`$`) Twitter recognized in `text`.

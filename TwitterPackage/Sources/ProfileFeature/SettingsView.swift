@@ -14,6 +14,7 @@ struct SettingsView: View {
     @Shared(.appStorage(Appearance.settingKey)) private var appearance = Appearance.system
     @Shared(.appStorage(RetroSettings.showsViewCountsKey)) private var showsViewCounts = false
     @Shared(.appStorage(RetroSettings.showsExactCountsKey)) private var showsExactCounts = false
+    @Shared(.appStorage(RetroSettings.showsClientKey)) private var showsClient = true
     @Shared(.appStorage(RetroSettings.confirmsLikesKey)) private var confirmsLikes = false
     @Shared(.appStorage(RetroSettings.confirmsFollowsKey)) private var confirmsFollows = false
     @Shared(.appStorage(RetroSettings.confirmsTweetsKey)) private var confirmsTweets = false
@@ -72,10 +73,12 @@ struct SettingsView: View {
                     Toggle("View Counts", isOn: Binding($showsViewCounts))
 
                     Toggle("Exact Counts", isOn: Binding($showsExactCounts))
+
+                    Toggle("Source Labels", isOn: Binding($showsClient))
                 } header: {
                     Text("Tweets")
                 } footer: {
-                    Text("Twitter 4.x showed no views. Exact counts read 12,345 instead of 12.3K.")
+                    Text("Twitter 4.x showed no views, and named the app a Tweet came from: via Twitter for iPhone. Exact counts read 12,345 instead of 12.3K.")
                 }
 
                 Section {

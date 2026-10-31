@@ -86,8 +86,10 @@ private struct FocusedStat: View {
 struct FocusedTimestampLine: View {
     let date: Date
     let views: Int?
+    let client: String?
     @Environment(\.tweetMetrics) private var metrics
     @AppStorage(RetroSettings.showsViewCountsKey) private var showsViewCounts = false
+    @AppStorage(RetroSettings.showsClientKey) private var showsClient = true
 
     var body: some View {
         HStack(spacing: 4) {
@@ -96,6 +98,12 @@ struct FocusedTimestampLine: View {
             Text(verbatim: "·")
 
             Text(date, format: .dateTime.month(.abbreviated).day().year())
+
+            if showsClient, let client {
+                Text("via \(client)")
+                    .lineLimit(1)
+                    .layoutPriority(-1)
+            }
 
             if showsViewCounts, let views {
                 Text(verbatim: "·")
