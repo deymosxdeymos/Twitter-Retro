@@ -1,6 +1,19 @@
 import LocalAuthentication
 import SwiftUI
 
+package enum DeviceUnlock {
+    package static var biometryName: String? {
+        let context = LAContext()
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        switch context.biometryType {
+        case .faceID: return "Face ID"
+        case .touchID: return "Touch ID"
+        case .opticID: return "Optic ID"
+        default: return nil
+        }
+    }
+}
+
 extension View {
     package func appliesAppLock() -> some View {
         modifier(AppLock())

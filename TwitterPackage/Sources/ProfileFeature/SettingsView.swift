@@ -96,7 +96,11 @@ struct SettingsView: View {
                 } header: {
                     Text("Privacy")
                 } footer: {
-                    Text("Asks for Face ID or your passcode when you open Twitter.")
+                    if let biometry = DeviceUnlock.biometryName {
+                        Text("Asks for \(biometry) or your passcode when you open Twitter.")
+                    } else {
+                        Text("Asks for your passcode when you open Twitter.")
+                    }
                 }
 
                 Section {
