@@ -7,4 +7,5 @@ package enum RetroSettings {
     package static let confirmsFollowsKey = "confirmsFollows"
     package static let confirmsTweetsKey = "confirmsTweets"
     package static let locksAppKey = "locksApp"
+    package static let notifiesKey = "notifies"
 }

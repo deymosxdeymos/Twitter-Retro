@@ -4,6 +4,7 @@ import FeedFeature
 import Models
 import SwiftUI
 import TwitterUI
+import UserNotifications
 
 /// Settings, from your own profile: the account you're signed in with, how Tweets look, sounds, and about the app.
 struct SettingsView: View {
@@ -18,6 +19,7 @@ struct SettingsView: View {
     @Shared(.appStorage(RetroSettings.confirmsFollowsKey)) private var confirmsFollows = false
     @Shared(.appStorage(RetroSettings.confirmsTweetsKey)) private var confirmsTweets = false
     @Shared(.appStorage(RetroSettings.locksAppKey)) private var locksApp = false
+    @Shared(.appStorage(RetroSettings.notifiesKey)) private var notifies = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -89,6 +91,14 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle("New Notifications", isOn: notificationsToggle)
+                } header: {
+                    Text("Notifications")
+                } footer: {
+                    Text("Checks for new notifications in the background now and then. iOS decides how often, so they can arrive late.")
+                }
+
+                Section {
                     Toggle("Lock Twitter", isOn: Binding($locksApp))
                 } header: {
                     Text("Privacy")
@@ -135,6 +145,23 @@ struct SettingsView: View {
                         .fixedSize()
                 }
                 .sharedBackgroundVisibility(.hidden)
+            }
+        }
+    }
+
+    private var notificationsToggle: Binding<Bool> {
+        Binding {
+            notifies
+        } set: { isOn in
+            guard isOn else {
+                $notifies.withLock { $0 = false }
+                return
+            }
+            Task {
+                let granted =
+                    (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]))
+                    ?? false
+                $notifies.withLock { $0 = granted }
             }
         }
     }

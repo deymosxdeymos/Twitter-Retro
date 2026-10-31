@@ -17,6 +17,10 @@ public struct TwitterScenes: Scene {
                 .limitsImageHeadroom()
                 .appliesAppearance()
                 .appliesAppLock()
+                .schedulesNotificationChecks()
+        }
+        .backgroundTask(.appRefresh(NotificationCheck.taskID)) {
+            await NotificationCheck.run()
         }
 
         WindowGroup("Twitter", for: WindowRoute.self) { $route in
