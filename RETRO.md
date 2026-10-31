@@ -19,7 +19,8 @@ The current reducers, API client, database, text handling, media playback and co
 
 ## Features beyond upstream
 
-- Settings → Tweets: view counts (off by default; Twitter 4.x had none), exact counts (12,345 instead of 12.3K), and source labels ("· Twitter for iPhone" in a Tweet's date line, matching its other dot separators; on by default). The source comes from X's `source` field; the mock Tweets say Twitter for iPhone.
+- No view counts: they arrived with X in late 2022, after the classic era. A Tweet's date line reads "21.14 · 31 Oct 2026 · Twitter for iPhone" (views still show in the iPad-only wide timeline, which the retro build doesn't use).
+- Settings → Tweets: exact counts (12,345 instead of 12.3K), and source labels ("· Twitter for iPhone" in a Tweet's date line, matching its other dot separators; on by default). The source comes from X's `source` field; the mock Tweets say Twitter for iPhone.
 - Settings → Ask First: confirm before liking, following or unfollowing, and sending a Tweet.
 - Settings → Privacy: Lock Twitter asks for Face ID or the passcode on launch and on return from the background. Without a passcode set it can't lock, so it doesn't.
 - After "Show more replies", the loaded replies stay joined to the conversation's thread line (an upstream bug, fixed in its own commit).

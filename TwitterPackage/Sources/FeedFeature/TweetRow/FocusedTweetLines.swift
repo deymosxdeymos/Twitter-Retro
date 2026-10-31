@@ -88,7 +88,6 @@ struct FocusedTimestampLine: View {
     let views: Int?
     let client: String?
     @Environment(\.tweetMetrics) private var metrics
-    @AppStorage(RetroSettings.showsViewCountsKey) private var showsViewCounts = false
     @AppStorage(RetroSettings.showsClientKey) private var showsClient = true
 
     var body: some View {
@@ -107,7 +106,7 @@ struct FocusedTimestampLine: View {
                     .layoutPriority(-1)
             }
 
-            if showsViewCounts, let views {
+            if let views {
                 Text(verbatim: "·")
 
                 Text(

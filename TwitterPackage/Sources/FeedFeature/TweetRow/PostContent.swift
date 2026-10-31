@@ -56,7 +56,7 @@ struct PostContent: View {
             }
 
             if isFocused, let date = tweet.createdAt {
-                FocusedTimestampLine(date: date, views: tweet.viewCount, client: tweet.client)
+                FocusedTimestampLine(date: date, views: nil, client: tweet.client)
             }
 
             if isFocused {

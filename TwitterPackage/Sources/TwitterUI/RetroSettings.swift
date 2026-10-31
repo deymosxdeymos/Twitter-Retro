@@ -1,7 +1,6 @@
 import Foundation
 
 package enum RetroSettings {
-    package static let showsViewCountsKey = "showsViewCounts"
     package static let showsExactCountsKey = "showsExactCounts"
     package static let showsClientKey = "showsClient"
     package static let confirmsLikesKey = "confirmsLikes"
