@@ -34,7 +34,7 @@ struct PostActivityMenu: View {
                     Button {
                         store.send(.likesButtonTapped(tweet))
                     } label: {
-                        Label("Likes", twitterIcon: .heartStroke)
+                        Label("Favorites", twitterIcon: .heartStroke)
                     }
                 }
             } label: {

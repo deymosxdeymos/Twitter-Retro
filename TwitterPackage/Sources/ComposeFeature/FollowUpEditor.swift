@@ -19,16 +19,17 @@ struct FollowUpEditor: View {
             VStack(alignment: .trailing, spacing: 4) {
                 TextField("Add another Tweet", text: $text, axis: .vertical)
                     .font(.title3)
+                    .accessibilityLabel("Next Tweet in thread")
                     .lineLimit(2...)
 
                 HStack {
-                    Text(remainingCharacters, format: .number)
-                        .font(.footnote.monospacedDigit())
-                        .foregroundStyle(remainingCharacters < 0 ? .twitterError : .secondary)
+                    CharacterCountdown(remaining: remainingCharacters)
 
                     Button("Remove", twitterIcon: .close, action: remove)
                         .labelStyle(.iconOnly)
-                        .controlSize(.small)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .buttonStyle(.classicBar(isOnSideBar: false))
+                        .accessibilityLabel("Remove Tweet from Thread")
                 }
             }
         }

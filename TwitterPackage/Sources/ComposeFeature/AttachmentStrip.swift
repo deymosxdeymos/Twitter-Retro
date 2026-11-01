@@ -15,10 +15,10 @@ struct AttachmentStrip: View {
                         .overlay(alignment: .topTrailing) {
                             Button("Remove", twitterIcon: .close) { remove(attachment.id) }
                                 .labelStyle(.iconOnly)
-                                .buttonStyle(.glass)
-                                .buttonBorderShape(.circle)
-                                .controlSize(.small)
-                                .padding(6)
+                                .frame(width: 44, height: 44)
+                                .buttonStyle(.classic)
+                                .accessibilityLabel(attachment.isVideo ? "Remove video" : "Remove photo")
+                                .padding(4)
                         }
                 }
             }
@@ -54,7 +54,8 @@ private struct AttachmentThumbnail: View {
             }
         }
         .frame(width: attachment.isVideo ? 160 : Self.height, height: Self.height)
-        .clipShape(.rect(cornerRadius: 12))
+        .clipShape(.rect(cornerRadius: 6))
+        .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(.primary.opacity(0.1)) }
         .accessibilityLabel(attachment.isVideo ? "Video" : "Photo")
         .task(id: attachment.id) {
             guard !attachment.isVideo, let image = UIImage(data: attachment.upload.data) else { return }

@@ -5,12 +5,19 @@ import Testing
 struct NotificationWordingTests {
     @Test
     func postsAndRepostsBecomeTweetsAndRetweets() {
-        #expect(TimelineParser.tweetWording("liked your post") == "liked your Tweet")
-        #expect(TimelineParser.tweetWording("liked your repost") == "liked your Retweet")
+        #expect(TimelineParser.tweetWording("liked your post") == "favorited your Tweet")
+        #expect(TimelineParser.tweetWording("liked your repost") == "favorited your Retweet")
         #expect(TimelineParser.tweetWording("reposted your post") == "Retweeted your Tweet")
-        #expect(TimelineParser.tweetWording("liked 3 of your posts") == "liked 3 of your Tweets")
+        #expect(TimelineParser.tweetWording("liked 3 of your posts") == "favorited 3 of your Tweets")
         #expect(TimelineParser.tweetWording("New post notifications") == "New Tweet notifications")
         #expect(TimelineParser.tweetWording("a postcard and a signpost") == "a postcard and a signpost")
+    }
+
+    @Test
+    func favoriteReplacementPreservesNamesAndScalarRanges() {
+        let worded = TimelineParser.tweetWording("Liked liked your post", boldRanges: [0..<5])
+        #expect(worded.text == "Liked favorited your Tweet")
+        #expect(worded.boldRanges == [0..<5])
     }
 
     @Test
@@ -22,7 +29,7 @@ struct NotificationWordingTests {
         #expect(worded.boldRanges == [0..<11, 16..<22])
 
         let moved = TimelineParser.tweetWording("Your post was liked by Ana", boldRanges: [23..<26])
-        #expect(moved.text == "Your Tweet was liked by Ana")
-        #expect(moved.boldRanges == [24..<27])
+        #expect(moved.text == "Your Tweet was favorited by Ana")
+        #expect(moved.boldRanges == [28..<31])
     }
 }

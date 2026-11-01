@@ -16,6 +16,8 @@ package struct MainView: View {
         @Environment(\.openWindow) private var openWindow
     #endif
 
+    private static let isPhone = UIDevice.current.userInterfaceIdiom == .phone
+
     package init(store: StoreOf<MainFeature>) {
         self.store = store
     }
@@ -28,7 +30,8 @@ package struct MainView: View {
             ClassicTabBar(
                 tabs: [
                     ClassicSidebarTab("Home", icon: .home, id: MainFeature.Tab.home),
-                    ClassicSidebarTab("Notifications", icon: .at, id: .notifications, badgeCount: store.unreadNotifications),
+                    ClassicSidebarTab(
+                        "Notifications", icon: .at, id: .notifications, badgeCount: store.unreadNotifications),
                     ClassicSidebarTab("Bookmarks", icon: .bookmark, id: .bookmarks),
                     ClassicSidebarTab("Profile", icon: .profile, id: .profile),
                     ClassicSidebarTab("Explore", icon: .hash, id: .explore)
@@ -37,24 +40,30 @@ package struct MainView: View {
                 reselect: { tabStack($0).send(.tabReselected) }
             )
         }
-            .sheet(item: $store.scope(state: \.compose, action: \.compose)) { composeStore in
-                ComposeView(store: composeStore)
-            }
-            .onAppear {
-                store.selectedTab = savedTab
-                #if DEBUG
-                    applyLaunchArguments()
-                #endif
-                if NotificationTap.consume() { store.selectedTab = .notifications }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: NotificationTap.didTap)) { _ in
-                if NotificationTap.consume() { store.selectedTab = .notifications }
-            }
-            .onChange(of: store.selectedTab) { savedTab = store.selectedTab }
-            .onChange(of: scenePhase) { old, new in
-                if old == .background, new != .background { store.send(.becameActive) }
-            }
-            .task { await store.send(.task).finish() }
+        // iPhone composers slid up over the whole screen, square-edged; the iPad's form sheet is period-correct.
+        .fullScreenCover(item: Self.isPhone ? $store.scope(state: \.compose, action: \.compose) : .constant(nil)) {
+            composeStore in
+            ComposeView(store: composeStore)
+        }
+        .sheet(item: Self.isPhone ? .constant(nil) : $store.scope(state: \.compose, action: \.compose)) {
+            composeStore in
+            ComposeView(store: composeStore)
+        }
+        .onAppear {
+            store.selectedTab = savedTab
+            #if DEBUG
+                applyLaunchArguments()
+            #endif
+            if NotificationTap.consume() { store.selectedTab = .notifications }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NotificationTap.didTap)) { _ in
+            if NotificationTap.consume() { store.selectedTab = .notifications }
+        }
+        .onChange(of: store.selectedTab) { savedTab = store.selectedTab }
+        .onChange(of: scenePhase) { old, new in
+            if old == .background, new != .background { store.send(.becameActive) }
+        }
+        .task { await store.send(.task).finish() }
     }
 
     private func tabStack(_ tab: MainFeature.Tab) -> StoreOf<TabStack> {
@@ -180,7 +189,8 @@ private final class MainTabBarController: UITabBarController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         for child in children {
-            let reserved = child.view.safeAreaInsets.bottom - child.additionalSafeAreaInsets.bottom
+            let reserved =
+                child.view.safeAreaInsets.bottom - child.additionalSafeAreaInsets.bottom
                 - view.safeAreaInsets.bottom
             let inset = -max(reserved, 0)
             if child.additionalSafeAreaInsets.bottom != inset { child.additionalSafeAreaInsets.bottom = inset }

@@ -11,36 +11,46 @@ package struct ListsView: View {
     }
 
     package var body: some View {
-        Group {
-            if let errorMessage = store.errorMessage, store.lists.isEmpty {
-                ContentUnavailableView {
-                    Label("Couldn't load Lists", twitterIcon: .warningStroke)
-                } description: {
-                    Text(errorMessage)
-                } actions: {
-                    Button("Try Again") { store.send(.retryButtonTapped) }
-                        .buttonStyle(.classic)
-                }
-            } else if store.hasLoaded, store.lists.isEmpty {
-                ContentUnavailableView("No Lists yet", twitterIcon: .lists)
-            } else if !store.hasLoaded {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List(store.lists) { list in
-                    Button {
-                        store.send(.listTapped(list))
-                    } label: {
-                        ListRow(list: list)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                if let errorMessage = store.errorMessage, store.lists.isEmpty {
+                    ContentUnavailableView {
+                        Label("Couldn't load Lists", twitterIcon: .warningStroke)
+                    } description: {
+                        Text(errorMessage)
+                    } actions: {
+                        Button("Try Again") { store.send(.retryButtonTapped) }
+                            .buttonStyle(.classic)
                     }
-                    .buttonStyle(.plain)
+                } else if store.hasLoaded, store.lists.isEmpty {
+                    ContentUnavailableView("No Lists yet", twitterIcon: .lists)
+                } else if !store.hasLoaded {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ForEach(store.lists) { list in
+                        Button {
+                            store.send(.listTapped(list))
+                        } label: {
+                            ListRow(list: list)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                        }
+                        .buttonStyle(.plain)
+                        TwitterDivider()
+                    }
                 }
-                .listStyle(.plain)
             }
+            .frame(maxWidth: 680)
+            .frame(maxWidth: .infinity)
+            .background { ClassicRefreshControlStyle() }
         }
         .navigationTitle("Lists")
         .navigationBarTitleDisplayMode(.inline)
-        .refreshable { await store.send(.refreshPulled).finish() }
+        .classicRefreshable {
+            await store.send(.refreshPulled).finish()
+            return store.errorMessage == nil
+        }
         .task { store.send(.task) }
     }
 }

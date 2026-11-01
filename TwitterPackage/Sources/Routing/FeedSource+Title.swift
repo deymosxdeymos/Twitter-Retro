@@ -10,7 +10,7 @@ extension FeedSource {
         case .search(_, let latest): latest ? "Latest" : "Top"
         case .searchMedia: "Media"
         case .thread: "Tweet"
-        case .userLikes: "Likes"
+        case .userLikes: "Favorites"
         case .userMedia: "Media"
         case .userPosts: "Tweets"
         case .userReplies: "Replies"

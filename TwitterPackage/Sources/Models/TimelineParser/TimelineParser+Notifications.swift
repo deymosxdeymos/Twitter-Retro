@@ -82,6 +82,7 @@ extension TimelineParser {
 
     private static var tweetWords: [(Regex<Substring>, String)] {
         [
+            (/\b[Ll]iked\b/, "favorited"),
             (/\b[Rr]eposted\b/, "Retweeted"),
             (/\b[Rr]eposts\b/, "Retweets"),
             (/\b[Rr]epost\b/, "Retweet"),

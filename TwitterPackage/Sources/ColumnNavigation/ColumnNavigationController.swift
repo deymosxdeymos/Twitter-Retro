@@ -836,9 +836,32 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
         return NSStringFromClass(type(of: view)) == "UIViewControllerWrapperView"
     }
 
+    private var awaitsBackGestureTransition = false
+
+    /// UIKit's content recognizer has priority even at the edge. Keep both native recognizers, but restrict
+    /// content-pop touches to the edge too, leaving horizontal media and tweet actions alone.
+    package func configureBackGesture() {
+        if let transition = transitionCoordinator {
+            guard !awaitsBackGestureTransition else { return }
+            awaitsBackGestureTransition = true
+            transition.animate(alongsideTransition: nil) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    awaitsBackGestureTransition = false
+                    configureBackGesture()
+                }
+            }
+            return
+        }
+        for recognizer in [interactivePopGestureRecognizer, interactiveContentPopGestureRecognizer].compactMap({ $0 }) {
+            recognizer.delegate = self
+            recognizer.isEnabled = !isColumnar && viewControllers.count > 1
+        }
+    }
+
     /// Tweetie's _updateLayout:. Lays out every column for the current offset / back drag / dismissal.
     func applyColumnLayout() {
-        interactivePopGestureRecognizer?.isEnabled = !isColumnar
+        configureBackGesture()
         // Only act as our own delegate while columnar. UIKit's swipe-back stops driving pops when the delegate
         // implements animationControllerFor: at all (even returning nil), so compact must have no delegate.
         if !isRunningColumnTransition {
@@ -1900,9 +1923,18 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
     }
 
     package func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        guard isColumnar, !isRunningColumnTransition else {
-            return gestureRecognizer === interactivePopGestureRecognizer ? !isColumnar : false
+        if gestureRecognizer === interactivePopGestureRecognizer
+            || gestureRecognizer === interactiveContentPopGestureRecognizer
+        {
+            guard !isColumnar, !isRunningColumnTransition, viewControllers.count > 1, transitionCoordinator == nil
+            else {
+                return false
+            }
+            guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return false }
+            let velocity = pan.velocity(in: view)
+            return velocity.x > abs(velocity.y)
         }
+        guard isColumnar, !isRunningColumnTransition else { return false }
         if gestureRecognizer === swipe {
             // Even a lone root can be nudged.
             return true
@@ -1938,6 +1970,9 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
     }
 
     package func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if gestureRecognizer === interactiveContentPopGestureRecognizer {
+            return touch.location(in: view).x <= Self.backSwipeZone
+        }
         switch gestureRecognizer {
         case swipe:
             // The overview (open or on its way) handles its own touches: the filmstrip scrolls, taps pick.
@@ -1948,6 +1983,13 @@ package final class ColumnNavigationController: UINavigationController, UINaviga
         default:
             return true
         }
+    }
+
+    package func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        // A row's left swipe opens its action tray; a closed row rejects right swipes and leaves column navigation alone.
+        gestureRecognizer === swipe && otherGestureRecognizer.name == "classic.tweet-actions"
     }
 
     /// Content scroll views wait for our gestures to decide (they fail fast on the wrong axis).

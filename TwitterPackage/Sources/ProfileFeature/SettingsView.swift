@@ -10,7 +10,7 @@ import UserNotifications
 struct SettingsView: View {
     let store: StoreOf<ProfileFeature>
     @Shared(.postRowStyle) private var postRowStyle
-    @Shared(.appStorage(MediaAutoplay.settingKey)) private var autoplaysMedia = false
+    @Shared(.appStorage(MediaAutoplay.settingKey)) private var autoplaysMedia = MediaAutoplay.defaultValue
     @Shared(.appStorage(ClassicSound.settingKey)) private var playsSounds = true
     @Shared(.appStorage(Appearance.settingKey)) private var appearance = Appearance.system
     @Shared(.appStorage(RetroSettings.showsExactCountsKey)) private var showsExactCounts = false
@@ -77,11 +77,13 @@ struct SettingsView: View {
                 } header: {
                     Text("Tweets")
                 } footer: {
-                    Text("Twitter named the app a Tweet came from, like Twitter for iPhone. Exact counts read 12,345 instead of 12.3K.")
+                    Text(
+                        "Twitter named the app a Tweet came from, like Twitter for iPhone. Exact counts read 12,345 instead of 12.3K."
+                    )
                 }
 
                 Section {
-                    Toggle("Before Liking", isOn: Binding($confirmsLikes))
+                    Toggle("Before Favoriting", isOn: Binding($confirmsLikes))
 
                     Toggle("Before Following", isOn: Binding($confirmsFollows))
 
@@ -95,7 +97,9 @@ struct SettingsView: View {
                 } header: {
                     Text("Notifications")
                 } footer: {
-                    Text("Checks for new notifications in the background now and then. iOS decides how often, so they can arrive late.")
+                    Text(
+                        "Checks for new notifications in the background now and then. iOS decides how often, so they can arrive late."
+                    )
                 }
 
                 Section {
@@ -159,7 +163,9 @@ struct SettingsView: View {
             }
             Task {
                 let granted =
-                    (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]))
+                    (try? await UNUserNotificationCenter.current().requestAuthorization(options: [
+                        .alert, .badge, .sound
+                    ]))
                     ?? false
                 $notifies.withLock { $0 = granted }
             }

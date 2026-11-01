@@ -28,14 +28,14 @@ package struct UserListView: View {
             .frame(maxWidth: .infinity)
             .frame(maxWidth: 680)
             .tweetMetrics()
+            .background { ClassicRefreshControlStyle() }
             .frame(maxWidth: .infinity)
         }
         .navigationTitle(store.source.title)
         .navigationBarTitleDisplayMode(.inline)
-        .refreshable {
-            ClassicSound.psst2.play()
+        .classicRefreshable {
             await store.send(.refreshPulled).finish()
-            ClassicSound.pop.play()
+            return store.errorMessage == nil
         }
         .task { store.send(.task) }
     }
@@ -142,7 +142,7 @@ extension UserListSource {
         switch self {
         case .followers: "No followers yet"
         case .following: "Not following anyone yet"
-        case .likers: "No likes to show"
+        case .likers: "No favorites to show"
         case .reposters: "No Retweets yet"
         case .searchPeople: "No people found"
         }

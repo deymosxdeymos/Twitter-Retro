@@ -30,6 +30,7 @@ package struct FeedView<Header: View>: View {
             }
             .scrollTargetLayout()
             .readableContentWidth()
+            .background { ClassicRefreshControlStyle() }
         }
         .scrollPosition($position, anchor: .top)
         .onScrollGeometryChange(for: Bool.self) { geometry in

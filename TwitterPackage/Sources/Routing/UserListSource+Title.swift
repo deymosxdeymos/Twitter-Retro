@@ -6,7 +6,7 @@ extension UserListSource {
         switch self {
         case .followers: "Followers"
         case .following: "Following"
-        case .likers: "Likes"
+        case .likers: "Favorites"
         case .reposters: "Retweets"
         case .searchPeople: "People"
         }

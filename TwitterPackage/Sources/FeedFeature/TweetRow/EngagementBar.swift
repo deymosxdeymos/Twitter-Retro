@@ -120,25 +120,12 @@ private struct RepostMenu: View {
     let tweet: Tweet
     let engagement: Engagement
     let store: StoreOf<FeedFeature>
-    @State private var isAsking = false
-
     var body: some View {
-        Button {
-            isAsking = true
-        } label: {
+        RetweetMenu(tweet: tweet, engagement: engagement, store: store) {
             EngagementLabel(icon: engagement.repost.isOn ? .repost : .repostStroke, count: engagement.repost.count)
                 .foregroundStyle(engagement.repost.isOn ? .twitterRepost : .twitterSecondary)
         }
         .buttonStyle(.plain)
-        .confirmationDialog("Retweet", isPresented: $isAsking, titleVisibility: .hidden) {
-            Button(engagement.repost.isOn ? "Undo Retweet" : "Retweet") {
-                store.send(.repostButtonTapped(tweet))
-            }
-
-            Button("Quote Tweet") {
-                store.send(.quoteButtonTapped(tweet))
-            }
-        }
         .onHold("View Retweets") { store.send(.repostsButtonTapped(tweet)) }
         .accessibilityLabel(engagement.repost.isOn ? "Undo Retweet" : "Retweet")
         .accessibilityValue(engagement.repost.count.formatted())
@@ -157,7 +144,8 @@ private struct HeldLikeButton: View {
         LikeButton(isLiked: engagement.like.isOn, count: engagement.like.count) {
             store.send(.likeButtonTapped(tweet))
         }
-        .onHold("View Likes", perform: tweet.author.id == viewer?.id ? { store.send(.likesButtonTapped(tweet)) } : nil)
+        .onHold(
+            "View Favorites", perform: tweet.author.id == viewer?.id ? { store.send(.likesButtonTapped(tweet)) } : nil)
     }
 }
 

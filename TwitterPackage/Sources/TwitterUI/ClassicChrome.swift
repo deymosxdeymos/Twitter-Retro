@@ -135,10 +135,11 @@ private struct ClassicSideBarFill: View {
 /// `iPad-columnbar-background`, stretched over everything above the content (status bar, navigation bar, and the
 /// safe-area bar it backs), keeping its slate bottom edge a point thick, with `iPad-top-shadow` falling onto the content.
 /// In dark mode, the same bar in slate.
-private struct ClassicColumnBarBackdrop: View {
+package struct ClassicColumnBarBackdrop: View {
+    package init() {}
     @Environment(\.colorScheme) private var colorScheme
 
-    var body: some View {
+    package var body: some View {
         Group {
             if colorScheme == .dark {
                 LinearGradient(
@@ -213,10 +214,11 @@ package struct ClassicDetailActionBar<Content: View>: View {
     }
 }
 
-private struct ClassicShelf: View {
+package struct ClassicShelf: View {
+    package init() {}
     @Environment(\.colorScheme) private var colorScheme
 
-    var body: some View {
+    package var body: some View {
         Group {
             if colorScheme == .dark {
                 LinearGradient(

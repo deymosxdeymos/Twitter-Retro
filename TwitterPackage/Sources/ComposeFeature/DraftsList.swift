@@ -8,7 +8,15 @@ struct DraftsList: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            ClassicNavigationBar("Drafts") {
+                EmptyView()
+            } trailing: {
+                Button("Done") { dismiss() }
+                    .buttonStyle(.classicProminent)
+                    .keyboardShortcut(.cancelAction)
+            }
+
             List {
                 ForEach(store.drafts) { draft in
                     Button {
@@ -36,14 +44,14 @@ struct DraftsList: View {
                 .onDelete { store.send(.deleteDrafts($0)) }
             }
             .listStyle(.plain)
-            .navigationTitle("Drafts")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", twitterIcon: .close, role: .close) { dismiss() }
+            .overlay {
+                if store.drafts.isEmpty {
+                    ContentUnavailableView(
+                        "No Drafts", twitterIcon: .drafts, description: Text("Saved Tweets will appear here."))
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .background(.background)
+        .presentationDragIndicator(.hidden)
     }
 }

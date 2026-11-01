@@ -99,30 +99,29 @@ private struct Letterpress: ViewModifier {
     }
 }
 
-/// The end of a timeline or thread, said calmly: a fleuron pressed into the page the way Twitter for iPad pressed in
-/// its bird (`emboss-bird`): a faint fill, shaded along its top inside edge, with the page's light catching the lip
-/// below it.
+/// The end of a timeline or thread, said calmly: the bird pressed into the page, as Twitter for iPad did
+/// (`emboss-bird`): a faint fill, shaded along its top inside edge, with the page's light catching the lip below it.
 package struct EndOfTimeline: View {
     @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 34
 
     package init() {}
 
     package var body: some View {
-        DebossedGlyph(systemName: "fleuron.fill", size: size)
+        DebossedGlyph(image: TwitterIcon.twitter.image, size: size)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 40)
             .accessibilityLabel("End of timeline")
     }
 }
 
-/// A symbol pressed into the page: a faint fill, a shadow along its top inside edge (the glyph less itself moved
+/// A template image pressed into the page: a faint fill, a shadow along its top inside edge (the glyph less itself moved
 /// down), and the page's light on the lip below.
 private struct DebossedGlyph: View {
-    let systemName: String
+    let image: Image
     let size: CGFloat
 
     var body: some View {
-        let glyph = Image(systemName: systemName).font(.system(size: size))
+        let glyph = image.resizable().scaledToFit().frame(width: size, height: size)
         glyph
             .foregroundStyle(Color(.debossFill))
             .overlay {

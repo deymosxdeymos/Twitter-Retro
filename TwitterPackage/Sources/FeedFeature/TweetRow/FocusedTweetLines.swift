@@ -36,7 +36,7 @@ struct FocusedStatsLine: View {
                     // Someone else's likes are private: the count is still shown, just not as a button.
                     FocusedStat(
                         count: likes,
-                        label: likes == 1 ? "Like" : "Likes",
+                        label: likes == 1 ? "Favorite" : "Favorites",
                         action: tweet.author.id == viewer?.id ? { store.send(.likesButtonTapped(tweet)) } : nil
                     )
                 }

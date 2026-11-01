@@ -20,9 +20,37 @@ package struct ComposeView: View {
     @State private var pickedItems: [PhotosPickerItem] = []
     @AppStorage(RetroSettings.confirmsTweetsKey) private var confirmsTweets = false
     @State private var isConfirmingTweet = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private let isPhone = UIDevice.current.userInterfaceIdiom == .phone
+
+    private var editingAnimation: Animation? { reduceMotion ? nil : .easeInOut(duration: 0.18) }
 
     package var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            ClassicNavigationBar(store.draft.replyingTo == nil ? "New Tweet" : "Reply") {
+                Button("Cancel") { store.send(.cancelButtonTapped) }
+                    .buttonStyle(.classic)
+                    .keyboardShortcut(.cancelAction)
+                    .disabled(store.isPosting || store.isDismissing)
+            } trailing: {
+                Button {
+                    if confirmsTweets { isConfirmingTweet = true } else { store.send(.postButtonTapped) }
+                } label: {
+                    HStack(spacing: 6) {
+                        if store.isPosting { ProgressView().tint(.white) }
+                        Text(store.isPosting ? "Sending…" : "Tweet")
+                    }
+                }
+                .buttonStyle(.classicProminent)
+                .disabled(!store.canPost)
+                .keyboardShortcut(.return, modifiers: .command)
+                .alert("Send this Tweet?", isPresented: $isConfirmingTweet) {
+                    Button("Tweet") { store.send(.postButtonTapped) }
+                    Button("Cancel", role: .cancel) {}
+                }
+            }
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if let replyingTo = store.draft.replyingTo {
@@ -35,6 +63,7 @@ package struct ComposeView: View {
                         axis: .vertical
                     )
                     .font(.title3)
+                    .accessibilityLabel(store.draft.replyingTo == nil ? "Tweet text" : "Reply text")
                     .lineLimit(4...)
                     .focused($focusedEditor, equals: .first)
 
@@ -46,7 +75,7 @@ package struct ComposeView: View {
 
                     if !store.attachments.isEmpty {
                         AttachmentStrip(attachments: store.attachments) { id in
-                            store.send(.removeAttachmentButtonTapped(id), animation: .snappy)
+                            store.send(.removeAttachmentButtonTapped(id), animation: editingAnimation)
                         }
                     }
 
@@ -64,7 +93,7 @@ package struct ComposeView: View {
                             },
                             remainingCharacters: followUp.remainingCharacters
                         ) {
-                            store.send(.removeFollowUpButtonTapped(followUp.id), animation: .snappy)
+                            store.send(.removeFollowUpButtonTapped(followUp.id), animation: editingAnimation)
                         }
                         .focused($focusedEditor, equals: .followUp(followUp.id))
                     }
@@ -79,36 +108,9 @@ package struct ComposeView: View {
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
             }
-            .navigationTitle(store.draft.replyingTo == nil ? "New Tweet" : "Reply")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", twitterIcon: .close, role: .cancel) {
-                        store.send(.cancelButtonTapped)
-                    }
-                    .disabled(store.isPosting || store.isDismissing)
-                }
-
-                if store.offersDrafts {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Drafts") { store.send(.draftsButtonTapped) }
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Tweet", twitterIcon: .compose, role: .confirm) {
-                        if confirmsTweets { isConfirmingTweet = true } else { store.send(.postButtonTapped) }
-                    }
-                    .disabled(!store.canPost)
-                    .alert("Send this Tweet?", isPresented: $isConfirmingTweet) {
-                        Button("Tweet") { store.send(.postButtonTapped) }
-                        Button("Cancel", role: .cancel) {}
-                    }
-                }
-
-            }
-            // Above the keyboard, as Twitter's composer keeps them.
-            .safeAreaBar(edge: .bottom) {
+            .disabled(store.isPosting || store.isDismissing)
+            // A solid shelf follows the keyboard instead of a floating glass toolbar.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 HStack {
                     PhotosPicker(
                         selection: $pickedItems,
@@ -117,43 +119,51 @@ package struct ComposeView: View {
                     ) {
                         Label("Add Media", twitterIcon: .mediaStroke)
                             .labelStyle(.iconOnly)
-                            .frame(width: 32, height: 32)
+                            .frame(minWidth: 44, minHeight: 44)
                     }
+                    .accessibilityLabel("Add Media")
                     .disabled(store.remainingPhotos == 0 || store.isPosting)
 
                     Button("Add another Tweet", twitterIcon: .plus) {
-                        store.send(.addFollowUpButtonTapped, animation: .snappy)
+                        store.send(.addFollowUpButtonTapped, animation: editingAnimation)
                     }
                     .labelStyle(.iconOnly)
-                    .frame(width: 32, height: 32)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .accessibilityLabel("Add another Tweet")
                     .disabled(!store.hasText || store.isPosting)
 
-                    Spacer()
+                    if store.offersDrafts {
+                        Button("Drafts") { store.send(.draftsButtonTapped) }
+                            .buttonStyle(.classic)
+                    }
 
-                    CharacterCountGauge(remaining: store.remainingCharacters)
+                    Spacer(minLength: 8)
+
+                    CharacterCountdown(remaining: store.remainingCharacters)
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
-            }
-            .overlay {
-                if store.isPosting {
-                    ProgressView()
-                        .controlSize(.large)
-                        .padding()
-                        .glassEffect(.regular, in: .rect(cornerRadius: 20))
-                }
+                .padding(.vertical, 6)
+                .buttonStyle(.classicBar(isOnSideBar: false))
+                .background { ClassicShelf().ignoresSafeArea(edges: .bottom) }
             }
         }
-        .interactiveDismissDisabled(!store.text.isEmpty || !store.attachments.isEmpty || store.isPosting)
+        .background(.background)
+        .interactiveDismissDisabled(
+            !store.text.isEmpty || !store.attachments.isEmpty || !store.followUps.isEmpty || store.isPosting
+        )
         .confirmationDialog($store.scope(state: \.confirmation, action: \.confirmation))
-        .sheet(isPresented: $store.isShowingDrafts) {
+        // Full screen and square-edged on iPhone, like the composer it covers.
+        .fullScreenCover(isPresented: isPhone ? $store.isShowingDrafts : .constant(false)) {
+            DraftsList(store: store)
+        }
+        .sheet(isPresented: isPhone ? .constant(false) : $store.isShowingDrafts) {
             DraftsList(store: store)
         }
         .task(id: pickedItems) {
             guard !pickedItems.isEmpty else { return }
             let uploads = await MediaUpload.load(pickedItems)
             pickedItems = []
-            store.send(.mediaPicked(uploads), animation: .snappy)
+            store.send(.mediaPicked(uploads), animation: editingAnimation)
         }
         .onAppear { focusedEditor = .first }
         // A Tweet added to the thread is where typing goes next.
@@ -163,23 +173,16 @@ package struct ComposeView: View {
     }
 }
 
-private struct CharacterCountGauge: View {
+struct CharacterCountdown: View {
     let remaining: Int
 
     var body: some View {
-        let progress =
-            Double(ComposeFeature.State.characterLimit - remaining) / Double(ComposeFeature.State.characterLimit)
-        Gauge(value: min(max(progress, 0), 1)) {
-            Text("Characters")
-        } currentValueLabel: {
-            Text(remaining, format: .number)
-                .monospacedDigit()
-        }
-        .gaugeStyle(.accessoryCircularCapacity)
-        .tint(remaining < 0 ? .twitterError : remaining < 20 ? .twitterWarning : .accentColor)
-        .scaleEffect(0.6)
-        // A scale effect doesn't shrink layout; size the slot the toolbar reserves to what's drawn.
-        .frame(width: 32, height: 32)
-        .accessibilityLabel("\(remaining) characters remaining")
+        Text(remaining, format: .number)
+            .font(.title3.monospacedDigit())
+            .foregroundStyle(remaining < 0 ? .twitterError : remaining < 20 ? .twitterWarning : .twitterSecondary)
+            .frame(minWidth: 52, minHeight: 44, alignment: .trailing)
+            .fixedSize(horizontal: true, vertical: false)
+            .accessibilityLabel(
+                remaining < 0 ? "\(-remaining) characters over the limit" : "\(remaining) characters remaining")
     }
 }

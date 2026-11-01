@@ -100,7 +100,7 @@ private struct MediaBorder: ViewModifier {
 /// One tappable tile of a `MediaGrid`, and the source the viewer zooms out of. Long-pressing it previews the item
 /// alone with its menu (see ``View/mediaPreview(_:link:openTitle:open:)``).
 ///
-/// Videos and GIFs show their play button. With autoplay on in Settings (off by default), they play muted on a loop
+/// Videos and GIFs show their play button. With autoplay on in Settings (on by default), they play muted on a loop
 /// while they're in view, as Twitter's timeline autoplays them, unless video autoplay is off in Accessibility.
 private struct MediaTile: View {
     let item: Media
@@ -111,7 +111,7 @@ private struct MediaTile: View {
     let zoomNamespace: Namespace.ID
     let open: () -> Void
 
-    @AppStorage(MediaAutoplay.settingKey) private var autoplaysMedia = false
+    @AppStorage(MediaAutoplay.settingKey) private var autoplaysMedia = MediaAutoplay.defaultValue
 
     private var autoplays: Bool { autoplaysMedia && UIAccessibility.isVideoAutoplayEnabled }
 
@@ -129,10 +129,7 @@ private struct MediaTile: View {
                 }
                 .overlay {
                     if item.kind != .photo, !autoplays {
-                        TwitterIconView(.play, size: 28)
-                            .foregroundStyle(.mediaGlyph)
-                            .padding(14)
-                            .glassEffect(.regular, in: .circle)
+                        ClassicPlayBadge()
                     }
                 }
                 .overlay(alignment: .bottomLeading) {
@@ -159,6 +156,20 @@ private struct MediaTile: View {
         .mediaPreview(item, link: link, open: open)
         .accessibilityLabel(item.altText ?? (item.kind == .photo ? "Image" : "Video"))
         .accessibilityHint("Opens full screen")
+    }
+}
+
+/// The old timeline's play button: a white triangle in a smoky disc ringed in white, lifted off the frame.
+private struct ClassicPlayBadge: View {
+    var body: some View {
+        TwitterIconView(.play, size: 26)
+            .foregroundStyle(.white)
+            .offset(x: 2)
+            .frame(width: 56, height: 56)
+            .background(.black.opacity(0.45), in: .circle)
+            .overlay { Circle().strokeBorder(.white, lineWidth: 2.5) }
+            .shadow(color: .black.opacity(0.4), radius: 3, y: 1)
+            .accessibilityHidden(true)
     }
 }
 

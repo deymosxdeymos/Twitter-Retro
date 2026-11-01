@@ -8,7 +8,7 @@ The current reducers, API client, database, text handling, media playback and co
 
 - iOS 27.0 deployment targets, with availability checks around newer APIs.
 - Original silver bar artwork and a dark horizontal bottom tab bar using the original icons. Compose stays in the top navigation bar.
-- Original feed and search switchers, Follow, poll and pill buttons, gap groove, letterpress and debossed end-of-timeline fleuron.
+- Original feed and search switchers, Follow, poll and pill buttons, gap groove, letterpress, and the bird debossed at the end of timelines and threads, as on Twitter for iPad.
 - "Tweet your reply" as a white field pressed into the detail action bar's shelf, instead of glass.
 - Laid out for a normal iPhone. iPhone Duo's vertical bar, fold-aware layouts and leading title alignment need iOS 27.1/27.2, so they are dropped or behind availability checks. `ClassicSidebar` is kept but unused.
 - Rounded-square avatars (including the profile header's ring and the profile preview), bitmap action icons, gold favorite stars and corner dog-ears.
@@ -24,13 +24,29 @@ The current reducers, API client, database, text handling, media playback and co
 - Settings → Ask First: confirm before liking, following or unfollowing, and sending a Tweet.
 - Settings → Privacy: Lock Twitter asks for Face ID or the passcode on launch and on return from the background. Without a passcode set it can't lock, so it doesn't.
 - After "Show more replies", the loaded replies stay joined to the conversation's thread line (an upstream bug, fixed in its own commit).
-- Tweetie 2's pull-to-refresh: the striped arrow and "Pull down to refresh…", flipping to "Release to refresh…" once the refresh catches, then "Loading…" with "Last Updated" underneath. It sits over the system refresh control (spinner hidden), so triggering, haptics, VoiceOver and Sam's psst/pop sounds are unchanged. Arrow, colors and layout from EGOTableViewPullRefresh (MIT, see THIRD_PARTY_NOTICES.md); dark colors are ours.
+- Tweetie 2-style pull-to-refresh: the striped arrow and "Pull down to refresh…", flipping to "Release to refresh…" while still holding past the catch, then "Loading…" with "Last Updated" underneath. Pulling back below the catch resets the arrow. Only the arrow animates, and Reduce Motion disables the flip animation. The system refresh control still owns the request and haptics; its spinner is hidden only inside classic feeds, leaving Lists and user lists alone. The arrow and psst catch sound share an 80pt threshold, an approximation because UIKit doesn't expose its arm distance. Arrow, colors and layout come from EGOTableViewPullRefresh (MIT, see THIRD_PARTY_NOTICES.md); dark colors are ours. The psst/pop sounds come from Twitter for iPad, so this is a period-inspired blend rather than an exact Tweetie 2 reproduction.
 - Settings → Notifications → New Notifications: asks for permission when turned on, then checks X in the background (an iOS background refresh, earliest 15 minutes after leaving the app; iOS decides when). New ones arrive as local notifications with their own text ("Becky Hansmeyer followed you"), or one summary for more than three, and the app icon shows the unread count. X doesn't push to third-party apps, so they can be late. `Twitter-Info.plist` adds the background mode and task ID to the generated Info.plist. Debug builds can run a check with `--check-notifications-in <seconds>`. Tapping a notification opens the Notifications tab, whether the app was in the background or closed; alerts that land while the app is open still show and go to Notification Center.
 - Search suggests accounts as you type (after a 0.25 s pause, using the existing typeahead endpoint), under a "Search for …" row. Hashtags and already-searched queries aren't looked up.
 
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.
 
-Still system glass: the back button (as in the original retro build), the Retweet / Quote Tweet popover, media overlays, compose and sign-in. On iPhone, links open in Safari's view, so the iPad web panel is unchanged.
+Still system: media overlays and sign-in. On iPhone, links open in Safari's view, so the iPad web panel is unchanged.
+
+## Classic interaction pass
+
+- Composer and Drafts: a silver bar with Cancel and a blue Tweet button, and a plain numeric countdown instead of the circular gauge. On iPhone both cover the whole screen with square edges, as the old modal composer did, instead of iOS's rounded floating sheet; the iPad keeps a form sheet. Media, threads and today's character limit are unchanged.
+- Favorites: visible Like/Likes wording, held actions and accessibility labels say Favorite/Favorites to match the gold star. The X API calls are unchanged.
+- Classic Back button: a silver bezel instead of glass. The native edge swipe still works, including cancelled and repeated swipes.
+- Retweet / Quote Tweet: an iPhone OS 3 `UIActionSheet` (`ClassicActionSheet.swift`): the page dims, a blue-grey tray rises with white glossy Retweet (or Undo Retweet) and Quote Tweet buttons, and a dark Cancel set apart. Pressed buttons turn the old selection blue. Tapping outside, Cancel, Escape and the VoiceOver escape gesture all dismiss it. The chosen action runs after the sheet is gone, so Quote Tweet can open the composer. Reduce Motion fades instead of sliding.
+- Lists and user lists share the timeline's arrow-and-text refresh header.
+- Timeline videos and GIFs autoplay muted by default (upstream had it off), as Twitter's timeline loops GIFs. Settings → Media turns it off, and iOS's Auto-Play Video Previews setting still wins. With it off, tiles show a classic white-ringed play button instead of glass. Installs that already saved the switch as off keep it off.
+- Swipe left on a Tweet for a dark, Tweetie-style tray: Reply, Retweet, Favorite, Bookmark, Share and Close. Swiping right closes it. Every action is still available from the visible action bar.
+
+The look stays Tweetie / Twitter 4.x. Tweetbot is a reference for interaction (muting, timeline behavior), not a second visual theme.
+
+Larger feature gaps include direct messages, multi-account switching and saved searches distinct from recent searches. The client currently has no DM endpoints or saved-search operations, and the session model has one shared viewer. Those need backend/session work, not decorative tabs. Bookmarks, quote cards, threaded composition and private likes are intentional modern departures; don't remove them for visual fidelity alone.
+
+Checks: all package tests (except snapshots) and all 11 simulator UI tests pass, including the swipe tray → Retweet sheet → Quote composer flow, composer and Drafts, the Back button with edge swipes, and Lists refresh. Screenshots of the sheet, composer and Drafts were checked on an iPhone 11 simulator. Refresh tests don't prove exact UIKit trigger alignment, loading timing on a real network, VoiceOver or device haptics.
 
 ## Build
 

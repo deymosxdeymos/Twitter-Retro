@@ -82,6 +82,11 @@ final class ColumnHostingController<Content: View>: UIHostingController<ColumnSc
         super.viewWillLayoutSubviews()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        (navigationController as? ColumnNavigationController)?.configureBackGesture()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // Its timeline may only just have loaded: pulling down at its top dismisses the column.
@@ -214,7 +219,18 @@ struct ColumnScreen<Content: View>: View {
             .classicTitleBar()
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .environment(\.columnBarPlacement, chrome.placement)
+            .navigationBarBackButtonHidden(id != nil)
             .toolbar {
+                if let id, chrome.placement == .ownBar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Back") { stack.send(.path(.popFrom(id: id))) }
+                            .buttonStyle(ClassicBackButtonStyle())
+                            .fixedSize()
+                            .keyboardShortcut(.leftArrow, modifiers: .command)
+                            .accessibilityHint("Returns to the previous screen")
+                    }
+                    .sharedBackgroundVisibility(.hidden)
+                }
                 // In the root's own bar; while a column is focused, in iPhone Duo's vertical bar with its other buttons.
                 // Never in the bar of a column the vertical bar isn't showing.
                 if (id == nil && chrome.placement == .ownBar) || chrome.placement == .verticalBar {
@@ -251,13 +267,14 @@ private struct ColumnStill: UIViewRepresentable {
 }
 
 private struct AlreadyHereShake: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let isActive: Bool
     let trigger: Int
 
     func body(content: Content) -> some View {
         content
             .keyframeAnimator(initialValue: CGFloat.zero, trigger: trigger) { content, offset in
-                content.offset(x: isActive ? offset : 0)
+                content.offset(x: isActive && !reduceMotion ? offset : 0)
             } keyframes: { _ in
                 KeyframeTrack {
                     CubicKeyframe(-5, duration: 0.08)

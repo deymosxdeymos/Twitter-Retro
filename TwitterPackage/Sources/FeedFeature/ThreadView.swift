@@ -42,6 +42,7 @@ package struct ThreadView: View {
                 .frame(minHeight: viewportHeight, alignment: .top)
             }
             .readableContentWidth()
+            .background { ClassicRefreshControlStyle() }
         }
         .scrollPosition($position, anchor: .top)
         // The container is what's visible between the bars: the insets the scroll view runs under them by are

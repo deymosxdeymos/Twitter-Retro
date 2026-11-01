@@ -40,11 +40,13 @@ package struct ClassicPullToRefresh: View {
             Group {
                 if phase == .loading {
                     ProgressView()
+                        .tint(Color(.pullRefreshText))
                         .frame(width: 23, height: 23)
                         .padding(.bottom, 18)
                 } else {
                     Image("PullArrow", bundle: .module)
-                        .rotationEffect(.degrees(phase == .release ? 180 : 0))
+                        .rotationEffect(.degrees(phase == .release ? -180 : 0))
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: phase)
                         .padding(.bottom, 6)
                 }
             }
@@ -54,7 +56,6 @@ package struct ClassicPullToRefresh: View {
         .frame(height: height, alignment: .bottom)
         .background(Color(.pullRefreshBackground))
         .clipped()
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: phase)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -65,9 +66,5 @@ package struct ClassicPullToRefresh: View {
         case .release: "Release to refresh…"
         case .loading: "Loading…"
         }
-    }
-
-    package static func hideSystemSpinner() {
-        UIRefreshControl.appearance().tintColor = .clear
     }
 }

@@ -16,6 +16,7 @@ package struct TweetRow: View {
     @Environment(\.tweetMetrics) private var metrics
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @SharedReader(.postRowStyle) private var style
+    @Environment(\.tweetActionTray) private var trays
 
     private var tweet: Tweet { item.tweet }
 
@@ -25,7 +26,29 @@ package struct TweetRow: View {
     /// The focused post of a thread is always stacked, as in Twitter.
     private var layout: PostRowStyle { isFocused ? .stacked : columnStyle }
 
+    private var isTrayOpen: Bool { !isFocused && trays?.tweetID == tweet.id }
+
     package var body: some View {
+        VStack(spacing: 0) {
+            tweetBody
+                .gesture(
+                    TweetActionSwipe(isOpen: isTrayOpen, isEnabled: !isFocused && trays != nil) { open in
+                        trays?.tweetID = open ? tweet.id : nil
+                    }
+                )
+
+            if isTrayOpen {
+                TweetActionTray(tweet: tweet, engagement: engagement, store: store) {
+                    trays?.tweetID = nil
+                }
+            }
+        }
+        .onDisappear {
+            if trays?.tweetID == tweet.id { trays?.tweetID = nil }
+        }
+    }
+
+    private var tweetBody: some View {
         VStack(alignment: .leading, spacing: 4 * metrics.unit) {
             if let reposter = item.repostedBy {
                 ContextLabel(symbol: TwitterIcon.repost.rawValue, text: Text("\(reposter.name) retweeted"))
@@ -70,6 +93,11 @@ package struct TweetRow: View {
         .contentShape(.rect)
         .onTapGesture { store.send(.tweetTapped(tweet)) }
         .contextMenu {
+            if !isFocused, let trays {
+                Button(isTrayOpen ? "Hide Tweet Actions" : "Show Tweet Actions", twitterIcon: .more) {
+                    trays.toggle(tweet.id)
+                }
+            }
             TweetMenu(tweet: tweet, engagement: engagement, store: store)
         } preview: {
             ThreadPreview(tweet: tweet, store: store)
@@ -77,6 +105,9 @@ package struct TweetRow: View {
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: "Open Tweet") { store.send(.tweetTapped(tweet)) }
+        .accessibilityAction(named: "Toggle Tweet Actions") {
+            if !isFocused { trays?.toggle(tweet.id) }
+        }
     }
 }
 
