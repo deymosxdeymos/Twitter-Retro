@@ -151,7 +151,21 @@ package struct ComposeView: View {
         .interactiveDismissDisabled(
             !store.text.isEmpty || !store.attachments.isEmpty || !store.followUps.isEmpty || store.isPosting
         )
-        .confirmationDialog($store.scope(state: \.confirmation, action: \.confirmation))
+        // Twitter's question on Cancel, as the old action sheet: discard at the top in red, keep, or go back.
+        .classicActionSheet(
+            isPresented: Binding(
+                get: { store.confirmation != nil },
+                set: { if !$0, store.confirmation != nil { store.send(.confirmation(.dismiss)) } }
+            ),
+            actions: [
+                ClassicActionSheetAction("Delete Draft", isDestructive: true) {
+                    store.send(.confirmation(.presented(.deleteTapped)))
+                },
+                ClassicActionSheetAction("Save Draft") {
+                    store.send(.confirmation(.presented(.saveDraftTapped)))
+                }
+            ]
+        )
         // Full screen and square-edged on iPhone, like the composer it covers.
         .fullScreenCover(isPresented: isPhone ? $store.isShowingDrafts : .constant(false)) {
             DraftsList(store: store)

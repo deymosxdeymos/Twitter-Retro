@@ -49,11 +49,12 @@ private struct ClassicActionSheetModifier: ViewModifier {
             }
     }
 
+    /// The action goes first, while whatever presented the sheet still considers it open; its own state may close it.
     private func finish() {
-        isPresented = false
         let action = pending
         pending = nil
         action?()
+        isPresented = false
     }
 }
 

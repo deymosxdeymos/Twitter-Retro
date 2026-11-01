@@ -19,6 +19,8 @@ final class ColumnGestureUITests: XCTestCase {
         capture(app, "Classic composer")
 
         app.buttons["Cancel"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Delete Draft"].waitForExistence(timeout: 5))
+        capture(app, "Classic draft sheet")
         app.buttons["Save Draft"].tap()
         XCTAssertTrue(app.buttons["New Tweet"].waitForExistence(timeout: 5))
         app.buttons["New Tweet"].tap()

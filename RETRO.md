@@ -35,6 +35,7 @@ Still system: media overlays and sign-in. On iPhone, links open in Safari's view
 ## Classic interaction pass
 
 - Composer and Drafts: a silver bar with Cancel and a blue Tweet button, and a plain numeric countdown instead of the circular gauge. On iPhone both cover the whole screen with square edges, as the old modal composer did, instead of iOS's rounded floating sheet; the iPad keeps a form sheet. Media, threads and today's character limit are unchanged.
+- Cancelling a Tweet with text asks with the same classic sheet: a red Delete Draft, Save Draft, and Cancel to keep writing.
 - Favorites: visible Like/Likes wording, held actions and accessibility labels say Favorite/Favorites to match the gold star. The X API calls are unchanged.
 - Classic Back button: a silver bezel instead of glass. The native edge swipe still works, including cancelled and repeated swipes.
 - Retweet / Quote Tweet: an iPhone OS 3 `UIActionSheet` (`ClassicActionSheet.swift`): the page dims, a blue-grey tray rises with white glossy Retweet (or Undo Retweet) and Quote Tweet buttons, and a dark Cancel set apart. Pressed buttons turn the old selection blue. Tapping outside, Cancel, Escape and the VoiceOver escape gesture all dismiss it. The chosen action runs after the sheet is gone, so Quote Tweet can open the composer. Reduce Motion fades instead of sliding.

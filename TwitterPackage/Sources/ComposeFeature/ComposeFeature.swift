@@ -177,7 +177,7 @@ package struct ComposeFeature {
                     TextState("Save this Tweet as a draft?")
                 } actions: {
                     ButtonState(role: .destructive, action: .deleteTapped) {
-                        TextState("Delete")
+                        TextState("Delete Draft")
                     }
                     ButtonState(action: .saveDraftTapped) {
                         TextState("Save Draft")
