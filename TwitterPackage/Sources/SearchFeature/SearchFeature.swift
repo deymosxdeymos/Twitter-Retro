@@ -10,6 +10,9 @@ package struct SearchFeature {
         var query = ""
         /// What was searched lately, newest first.
         @Shared(.recentSearches) var recentSearches
+        /// Searches kept on purpose, in the order they were saved. On this device only: the client has no endpoint
+        /// for Twitter's own saved searches.
+        @Shared(.savedSearches) var savedSearches
         @Presents var results: SearchResults.State?
         var submittedQuery: String?
         var suggestions: [User] = []
@@ -34,6 +37,9 @@ package struct SearchFeature {
         case clearRecentSearchesButtonTapped
         case delegate(ContentDelegate)
         case recentSearchTapped(String)
+        case savedSearchDeleted(String)
+        case savedSearchTapped(String)
+        case saveSearchButtonTapped
         case results(PresentationAction<SearchResults.Action>)
         case resultsCleared(query: String)
         case searchSubmitted
@@ -80,6 +86,25 @@ package struct SearchFeature {
             case .recentSearchTapped(let query):
                 state.query = query
                 return .send(.searchSubmitted)
+
+            case .savedSearchDeleted(let query):
+                state.$savedSearches.withLock { $0.removeAll { $0 == query } }
+                return .none
+
+            case .savedSearchTapped(let query):
+                state.query = query
+                return .send(.searchSubmitted)
+
+            case .saveSearchButtonTapped:
+                guard let query = state.submittedQuery else { return .none }
+                state.$savedSearches.withLock {
+                    if let index = $0.firstIndex(where: { $0.caseInsensitiveCompare(query) == .orderedSame }) {
+                        $0.remove(at: index)
+                    } else {
+                        $0.append(query)
+                    }
+                }
+                return .none
 
             case .results(.presented(.delegate(let delegate))):
                 return .send(.delegate(delegate))
@@ -149,6 +174,12 @@ package struct SearchFeature {
 extension SearchFeature.State {
     static let recentSearchLimit = 10
 
+    /// Whether the search on screen is saved; nil before anything's been searched.
+    var isSubmittedQuerySaved: Bool? {
+        guard let submittedQuery, query == submittedQuery else { return nil }
+        return savedSearches.contains { $0.caseInsensitiveCompare(submittedQuery) == .orderedSame }
+    }
+
     var suggestionQuery: String? {
         let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty, query != submittedQuery, !query.hasPrefix("#") else { return nil }
@@ -161,5 +192,10 @@ extension SharedKey where Self == FileStorageKey<[String]>.Default {
     /// Searches made lately, kept on disk, newest first.
     static var recentSearches: Self {
         Self[.fileStorage(.applicationSupportDirectory.appending(component: "recent-searches.json")), default: []]
+    }
+
+    /// Searches saved from the search bar's bookmark button, kept on disk.
+    static var savedSearches: Self {
+        Self[.fileStorage(.applicationSupportDirectory.appending(component: "saved-searches.json")), default: []]
     }
 }

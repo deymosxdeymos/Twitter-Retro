@@ -5,137 +5,213 @@ import TwitterUI
 
 package struct SearchView: View {
     @Bindable var store: StoreOf<SearchFeature>
+    @FocusState private var isSearching: Bool
 
     package init(store: StoreOf<SearchFeature>) {
         self.store = store
     }
 
     package var body: some View {
-        Group {
-            if let resultsStore = store.scope(state: \.results, action: \.results.presented) {
-                SearchResultsView(store: resultsStore)
-            } else if !store.trends.isEmpty || !store.recentSearches.isEmpty {
-                TrendsList(
-                    recentSearches: store.recentSearches,
-                    trends: store.trends,
-                    searchAgain: { store.send(.recentSearchTapped($0)) },
-                    clearRecentSearches: { store.send(.clearRecentSearchesButtonTapped, animation: .snappy) },
-                    select: { store.send(.trendTapped($0)) }
-                )
-            } else if !store.hasLoadedTrends {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ContentUnavailableView(
-                    "Search Twitter",
-                    twitterIcon: .searchStroke,
-                    description: Text("Find Tweets, people, and #topics.")
-                )
+        VStack(spacing: 0) {
+            ClassicSearchBar(
+                text: $store.query,
+                isFocused: $isSearching,
+                isSaved: store.isSubmittedQuerySaved,
+                submit: {
+                    isSearching = false
+                    store.send(.searchSubmitted)
+                },
+                toggleSaved: { store.send(.saveSearchButtonTapped, animation: .snappy) },
+                cancel: {
+                    isSearching = false
+                    // Back to the search on screen, or to Explore if there wasn't one.
+                    store.query = store.submittedQuery ?? ""
+                }
+            )
+
+            ZStack {
+                let isSuggesting = isSearching && store.suggestionQuery != nil
+                content
+                    .accessibilityHidden(isSuggesting)
+
+                if isSuggesting {
+                    SuggestionsList(
+                        query: store.query,
+                        suggestions: store.suggestions,
+                        search: {
+                            isSearching = false
+                            store.send(.searchSubmitted)
+                        },
+                        select: { user in
+                            isSearching = false
+                            store.send(.suggestionTapped(user))
+                        }
+                    )
+                }
             }
+            .frame(maxHeight: .infinity)
         }
         .task { store.send(.task) }
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $store.query, prompt: "Search")
-        .searchSuggestions {
-            if store.suggestionQuery != nil {
-                Button {
-                    store.send(.searchSubmitted)
-                } label: {
-                    Label("Search for “\(store.query)”", twitterIcon: .searchStroke)
-                }
+    }
 
-                ForEach(store.suggestions) { user in
-                    Button {
-                        store.send(.suggestionTapped(user))
-                    } label: {
-                        HStack(spacing: 10) {
-                            Avatar(user: user, size: 36)
-
-                            AuthorLine(user: user, date: nil, layout: .stacked)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .contentShape(.rect)
-                        .tweetMetrics()
-                    }
-                    .accessibilityLabel("\(user.name), @\(user.screenName)")
-                }
-            }
+    @ViewBuilder
+    private var content: some View {
+        if let resultsStore = store.scope(state: \.results, action: \.results.presented) {
+            SearchResultsView(store: resultsStore)
+        } else if !store.trends.isEmpty || !store.recentSearches.isEmpty || !store.savedSearches.isEmpty {
+            ExploreList(
+                savedSearches: store.savedSearches,
+                recentSearches: store.recentSearches,
+                trends: store.trends,
+                search: { store.send(.recentSearchTapped($0)) },
+                deleteSaved: { store.send(.savedSearchDeleted($0), animation: .snappy) },
+                clearRecentSearches: { store.send(.clearRecentSearchesButtonTapped, animation: .snappy) },
+                select: { store.send(.trendTapped($0)) }
+            )
+        } else if !store.hasLoadedTrends {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ContentUnavailableView(
+                "Search Twitter",
+                twitterIcon: .searchStroke,
+                description: Text("Find Tweets, people, and #topics.")
+            )
         }
-        .onSubmit(of: .search) { store.send(.searchSubmitted) }
     }
 }
 
-/// Explore before a search: recent searches to run again, then trends, each one's context over its name and how much
-/// it's being talked about.
-private struct TrendsList: View {
+/// What's typed, as a search to run, then the accounts it matches, over whatever was on screen.
+private struct SuggestionsList: View {
+    let query: String
+    let suggestions: [User]
+    let search: () -> Void
+    let select: (User) -> Void
+
+    var body: some View {
+        List {
+            Button(action: search) {
+                Label("Search for “\(query)”", twitterIcon: .searchStroke)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+
+            ForEach(suggestions) { user in
+                Button {
+                    select(user)
+                } label: {
+                    HStack(spacing: 10) {
+                        Avatar(user: user, size: 36)
+
+                        AuthorLine(user: user, date: nil, layout: .stacked)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .contentShape(.rect)
+                    .tweetMetrics()
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(user.name), @\(user.screenName)")
+            }
+        }
+        .listStyle(.plain)
+        .background(.background)
+    }
+}
+
+/// Explore before a search, as Twitter 4.x's Search tab: saved searches, recent ones, then trends, each under a plain
+/// table's gradient header.
+private struct ExploreList: View {
+    let savedSearches: [String]
     let recentSearches: [String]
     let trends: [Trend]
-    let searchAgain: (String) -> Void
+    let search: (String) -> Void
+    let deleteSaved: (String) -> Void
     let clearRecentSearches: () -> Void
     let select: (Trend) -> Void
 
     var body: some View {
         List {
-            if !recentSearches.isEmpty {
-                HStack {
-                    Text("Recent")
-                        .font(.title3.weight(.heavy))
-
-                    Spacer()
-
-                    Button("Clear", action: clearRecentSearches)
-                        .font(.subheadline)
-                        .buttonStyle(.borderless)
-                }
-                .listRowSeparator(.hidden)
-
-                ForEach(recentSearches, id: \.self) { query in
-                    Button {
-                        searchAgain(query)
-                    } label: {
-                        Label(query, twitterIcon: .searchStroke)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(.rect)
+            if !savedSearches.isEmpty {
+                Section {
+                    ForEach(savedSearches, id: \.self) { query in
+                        queryRow(query, icon: .bookmarkStroke)
+                            .swipeActions {
+                                Button("Delete", role: .destructive) { deleteSaved(query) }
+                            }
+                            .contextMenu {
+                                Button("Remove Saved Search", twitterIcon: .trash, role: .destructive) {
+                                    deleteSaved(query)
+                                }
+                            }
                     }
-                    .buttonStyle(.plain)
+                } header: {
+                    header("Saved Searches")
+                }
+            }
+
+            if !recentSearches.isEmpty {
+                Section {
+                    ForEach(recentSearches, id: \.self) { query in
+                        queryRow(query, icon: .searchStroke)
+                    }
+                } header: {
+                    header("Recent") {
+                        Button("Clear", action: clearRecentSearches)
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Clear Recent Searches")
+                    }
                 }
             }
 
             if !trends.isEmpty {
-                Text("Trends for you")
-                    .font(.title3.weight(.heavy))
-                    .listRowSeparator(.hidden)
-            }
+                Section {
+                    ForEach(trends) { trend in
+                        Button {
+                            select(trend)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(trend.name)
+                                    .font(.body.weight(.bold))
 
-            Section {
-                ForEach(trends) { trend in
-                    Button {
-                        select(trend)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            if let context = trend.context {
-                                Text(context)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                if let detail = [trend.context, trend.volume].compactMap(\.self).first {
+                                    Text(detail)
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
-
-                            Text(trend.name)
-                                .font(.body.weight(.bold))
-
-                            if let volume = trend.volume {
-                                Text(volume)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(.rect)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(.rect)
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                } header: {
+                    header("Trends")
                 }
             }
         }
         .listStyle(.plain)
+        // The first header sits right under the search bar, as a table's did.
+        .contentMargins(.top, 0, for: .scrollContent)
+    }
+
+    private func queryRow(_ query: String, icon: TwitterIcon) -> some View {
+        Button {
+            search(query)
+        } label: {
+            Label(query, twitterIcon: icon)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func header(_ title: LocalizedStringKey, @ViewBuilder trailing: () -> some View = { EmptyView() })
+        -> some View
+    {
+        ClassicPlainHeader(title, trailing: trailing)
+            .listRowInsets(EdgeInsets())
     }
 }
