@@ -51,23 +51,14 @@ package struct MediaViewer: View {
                     showsChrome: showsChrome,
                     tweet: tweet
                 )
+
+                topBar
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .opacity(showsChrome ? 1 : 0)
+                    .allowsHitTesting(showsChrome)
             }
             .background(.mediaBackdrop, ignoresSafeAreaEdges: .all)
-            .toolbarVisibility(showsChrome ? .automatic : .hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", twitterIcon: .close, role: .close) { dismiss() }
-                }
-
-                if let item = media.first(where: { $0.id == selection }) {
-                    // A photo as itself; a video or GIF as its place in the Tweet, as Twitter shares them.
-                    if let url = item.kind == .photo ? item.fullSizeURL : tweet?.mediaURL(of: item) ?? item.videoURL {
-                        ToolbarItem(placement: .primaryAction) {
-                            ShareLink(item: url)
-                        }
-                    }
-                }
-            }
+            .toolbarVisibility(.hidden, for: .navigationBar)
         }
         // A mention or link in the caption opens where the post is (a column, a pushed profile), so the viewer gets
         // out of the way first rather than opening it behind itself.
@@ -99,6 +90,30 @@ package struct MediaViewer: View {
             if isZoomed { withAnimation(.snappy) { showsChrome = false } }
         }
         .accessibilityAction(.escape) { dismiss() }
+    }
+
+    /// Done, where the page is among several, and the share action, on the black bar.
+    private var topBar: some View {
+        let index = media.firstIndex { $0.id == selection }
+        return ClassicBlackBar {
+            Button("Done") { dismiss() }
+                .buttonStyle(ClassicBlackBarButtonStyle())
+        } title: {
+            if media.count > 1, let index {
+                Text("\(index + 1) of \(media.count)").monospacedDigit()
+            }
+        } trailing: {
+            if let index {
+                let item = media[index]
+                // A photo as itself; a video or GIF as its place in the Tweet, as Twitter shares them.
+                if let url = item.kind == .photo ? item.fullSizeURL : tweet?.mediaURL(of: item) ?? item.videoURL {
+                    ShareLink(item: url) {
+                        ClassicGlyphLabel("Share", glyph: .action)
+                    }
+                    .buttonStyle(ClassicBlackBarButtonStyle())
+                }
+            }
+        }
     }
 }
 
@@ -164,11 +179,23 @@ private struct MediaCaption: View {
     private var index: Int? { media.firstIndex { $0.id == selection } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(spacing: 10) {
             if let playback, let index, media[index].kind == .video {
                 VideoControls(playback: playback)
+                    .frame(maxWidth: 520)
+                    .padding(.horizontal, 12)
             }
 
+            strip
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .opacity(isLayered && !showsChrome ? 0 : 1)
+        .allowsHitTesting(!isLayered || showsChrome)
+    }
+
+    /// The post in the black bar's material, along the bottom.
+    private var strip: some View {
+        VStack(alignment: .leading, spacing: 10) {
             if let tweet {
                 HStack(spacing: 10) {
                     Avatar(user: tweet.author, size: 36)
@@ -192,23 +219,12 @@ private struct MediaCaption: View {
                 .foregroundStyle(.secondary)
             }
 
-            if media.count > 1, let index {
-                Text("\(index + 1) of \(media.count)")
-                    .font(.footnote.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
         }
         .padding()
-        .frame(maxWidth: isLayered ? 680 : .infinity, alignment: .leading)
+        .frame(maxWidth: 680, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .background {
-            if isLayered {
-                Rectangle()
-                    .fill(Color.mediaScrim.gradient)
-                    .ignoresSafeArea()
-            }
+            ClassicBlackBarBackground().ignoresSafeArea(edges: .bottom)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isLayered ? .bottom : .center)
-        .opacity(isLayered && !showsChrome ? 0 : 1)
-        .allowsHitTesting(!isLayered || showsChrome)
     }
 }

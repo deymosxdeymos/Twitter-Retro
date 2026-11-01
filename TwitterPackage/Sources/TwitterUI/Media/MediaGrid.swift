@@ -160,12 +160,14 @@ private struct MediaTile: View {
 }
 
 /// The old timeline's play button: a white triangle in a smoky disc ringed in white, lifted off the frame.
-private struct ClassicPlayBadge: View {
+struct ClassicPlayBadge: View {
+    var size: CGFloat = 56
+
     var body: some View {
-        TwitterIconView(.play, size: 26)
+        TwitterIconView(.play, size: size * 0.46)
             .foregroundStyle(.white)
             .offset(x: 2)
-            .frame(width: 56, height: 56)
+            .frame(width: size, height: size)
             .background(.black.opacity(0.45), in: .circle)
             .overlay { Circle().strokeBorder(.white, lineWidth: 2.5) }
             .shadow(color: .black.opacity(0.4), radius: 3, y: 1)

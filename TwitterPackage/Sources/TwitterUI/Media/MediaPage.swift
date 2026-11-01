@@ -105,10 +105,7 @@ private struct VideoPage: View {
                 Button {
                     playback.play()
                 } label: {
-                    TwitterIconView(.play, size: 32)
-                        .foregroundStyle(.mediaGlyph)
-                        .padding(20)
-                        .glassEffect(.regular.interactive(), in: .circle)
+                    ClassicPlayBadge(size: 72)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Play")

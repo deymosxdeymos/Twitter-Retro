@@ -30,7 +30,7 @@ The current reducers, API client, database, text handling, media playback and co
 
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.
 
-Still system: media overlays and sign-in. On iPhone, links open in Safari's view, so the iPad web panel is unchanged.
+Still system: sign-in. On iPhone, links open in Safari's view, so the iPad web panel is unchanged.
 
 ## Classic interaction pass
 
@@ -41,6 +41,7 @@ Still system: media overlays and sign-in. On iPhone, links open in Safari's view
 - Retweet / Quote Tweet: an iPhone OS 3 `UIActionSheet` (`ClassicActionSheet.swift`): the page dims, a blue-grey tray rises with white glossy Retweet (or Undo Retweet) and Quote Tweet buttons, and a dark Cancel set apart. Pressed buttons turn the old selection blue. Tapping outside, Cancel, Escape and the VoiceOver escape gesture all dismiss it. The chosen action runs after the sheet is gone, so Quote Tweet can open the composer. Reduce Motion fades instead of sliding.
 - Lists and user lists share the timeline's arrow-and-text refresh header.
 - Timeline videos and GIFs autoplay muted by default (upstream had it off), as Twitter's timeline loops GIFs. Settings → Media turns it off, and iOS's Auto-Play Video Previews setting still wins. With it off, tiles show a classic white-ringed play button instead of glass. Installs that already saved the switch as off keep it off.
+- Media viewer in the old Photos and movie-player style: a black translucent bar with a glossy Done, "2 of 3" and the classic share glyph, and the Tweet in the same black strip along the bottom. Video gets the old player's smoked, rounded control panel with a blue-filled scrubber and glossy knob, moved down to the thumb as one row (play/pause, times, sound) without a volume slider. A paused video shows the classic play badge. Swipe-down dismissal, zoom transitions, pinch zoom, alt text and VoiceOver (the scrubber is a standard slider to VoiceOver) are unchanged.
 - Swipe left on a Tweet for a dark, Tweetie-style tray: Reply, Retweet, Favorite, Bookmark, Share and Close. Swiping right closes it. Every action is still available from the visible action bar.
 
 The look stays Tweetie / Twitter 4.x. Tweetbot is a reference for interaction (muting, timeline behavior), not a second visual theme.
