@@ -160,6 +160,8 @@ private struct ClassicSheetButtonStyle: ButtonStyle {
                 y: isLight ? 1 : -1
             )
             .padding(.horizontal, 12)
+            // Below the 46pt minimum at default sizes; keeps large text off the bezel.
+            .padding(.vertical, 8)
             .frame(maxWidth: .infinity, minHeight: 46)
             .background { Gloss(colors: colors(isPressed: configuration.isPressed)) }
             .contentShape(.rect(cornerRadius: 10))
