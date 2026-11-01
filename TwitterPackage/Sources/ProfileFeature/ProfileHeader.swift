@@ -74,7 +74,10 @@ struct ProfileHeader: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if !isViewer {
+                if isViewer {
+                    Button("Edit Profile") { store.send(.editProfileButtonTapped) }
+                        .buttonStyle(.classic)
+                } else {
                     if user.isBlocking {
                         Button("Unblock") { store.send(.blockButtonTapped) }
                             .buttonStyle(.classic)

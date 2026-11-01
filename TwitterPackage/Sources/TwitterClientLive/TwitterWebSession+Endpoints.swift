@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import TwitterClient
 
 extension TwitterWebSession {
     func viewer() async throws -> User {
@@ -89,6 +90,28 @@ extension TwitterWebSession {
 
     func setPinned(_ pinned: Bool, tweetID: String) async throws {
         _ = try await graphQL(pinned ? "PinTweet" : "UnpinTweet", variables: ["tweet_id": .string(tweetID)])
+    }
+
+    /// The words first, so a picture that fails doesn't lose them; then each new picture, as the web client's own
+    /// v1.1 endpoints take them (base64). Returns the profile as Twitter now has it.
+    func updateProfile(_ edit: ProfileEdit) async throws -> User {
+        let json = try await restPost(
+            "/i/api/1.1/account/update_profile.json",
+            form: [
+                "name": edit.name, "description": edit.bio, "location": edit.location, "url": edit.website,
+                "skip_status": "1"
+            ])
+        if let avatar = edit.avatar {
+            _ = try await restPost(
+                "/i/api/1.1/account/update_profile_image.json",
+                form: ["image": avatar.base64EncodedString(), "skip_status": "1"])
+        }
+        if let banner = edit.banner {
+            _ = try await restPost(
+                "/i/api/1.1/account/update_profile_banner.json", form: ["banner": banner.base64EncodedString()])
+        }
+        guard let screenName = (json as? [String: Any])?["screen_name"] as? String else { return try await viewer() }
+        return try await user(screenName: screenName)
     }
 
     func setFollowing(_ follow: Bool, userID: String) async throws {

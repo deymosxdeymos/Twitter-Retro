@@ -14,6 +14,27 @@ package struct MediaUpload: Hashable, Sendable {
     }
 }
 
+/// Changes to the signed-in account's profile. Pictures are JPEG, already sized: a square avatar and a 3:1 header.
+package struct ProfileEdit: Equatable, Sendable {
+    package var name: String
+    package var bio: String
+    package var location: String
+    package var website: String
+    package var avatar: Data?
+    package var banner: Data?
+
+    package init(
+        name: String, bio: String, location: String, website: String, avatar: Data? = nil, banner: Data? = nil
+    ) {
+        self.name = name
+        self.bio = bio
+        self.location = location
+        self.website = website
+        self.avatar = avatar
+        self.banner = banner
+    }
+}
+
 @DependencyClient
 package struct TwitterClient: Sendable {
     package var deleteTweet: @Sendable (_ id: String) async throws -> Void
@@ -38,6 +59,8 @@ package struct TwitterClient: Sendable {
     package var trends: @Sendable () async throws -> [Trend]
     /// Accounts matching what's been typed after an @, for completing a mention.
     package var typeahead: @Sendable (_ query: String) async throws -> [User]
+    /// Saves the viewer's profile and returns it as Twitter now has it.
+    package var updateProfile: @Sendable (_ edit: ProfileEdit) async throws -> User
     /// How many notifications are unread, as the web client's badge shows.
     package var unreadNotificationCount: @Sendable () async throws -> Int
     package var user: @Sendable (_ screenName: String) async throws -> User
@@ -71,6 +94,15 @@ extension TwitterClient: TestDependencyKey {
                     $0.screenName.localizedCaseInsensitiveContains(query)
                         || $0.name.localizedCaseInsensitiveContains(query)
                 }
+            },
+            updateProfile: { edit in
+                var user = User.mock
+                user.name = edit.name
+                user.bio = edit.bio
+                user.location = edit.location
+                user.website = edit.website.isEmpty ? nil : edit.website
+                user.websiteURL = edit.website.isEmpty ? nil : URL(string: edit.website)
+                return user
             },
             unreadNotificationCount: { 3 },
             user: { screenName in

@@ -4,7 +4,7 @@ import SwiftUI
 import TwitterUI
 
 package struct ProfileView: View {
-    let store: StoreOf<ProfileFeature>
+    @Bindable var store: StoreOf<ProfileFeature>
     @Environment(\.columnBarPlacement) private var columnBarPlacement
 
     package init(store: StoreOf<ProfileFeature>) {
@@ -52,7 +52,19 @@ package struct ProfileView: View {
         ) {
             SettingsView(store: store)
         }
+        // Full screen and square-edged on iPhone, as the composer; a form sheet on iPad.
+        .fullScreenCover(
+            item: Self.isPhone ? $store.scope(state: \.editProfile, action: \.editProfile) : .constant(nil)
+        ) { editStore in
+            EditProfileView(store: editStore)
+        }
+        .sheet(item: Self.isPhone ? .constant(nil) : $store.scope(state: \.editProfile, action: \.editProfile)) {
+            editStore in
+            EditProfileView(store: editStore)
+        }
     }
+
+    private static let isPhone = UIDevice.current.userInterfaceIdiom == .phone
 }
 
 /// A profile's "…" menu: the viewer's own account settings, or blocking someone else.
@@ -81,6 +93,10 @@ package struct ProfileMenuItems: View {
         Divider()
 
         if store.isViewer {
+            Button("Edit Profile", twitterIcon: .personStroke) {
+                store.send(.editProfileButtonTapped)
+            }
+
             Button("Settings", twitterIcon: .settings) {
                 store.send(.settingsButtonTapped)
             }

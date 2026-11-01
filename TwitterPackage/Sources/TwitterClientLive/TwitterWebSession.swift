@@ -329,13 +329,22 @@ actor TwitterWebSession {
         return json
     }
 
+    /// `application/x-www-form-urlencoded`, where `+` means a space: so it, `&`, `=` and everything else outside the
+    /// unreserved set is escaped (URLComponents leaves `+` alone, which turned "C++" into "C  ").
+    static func formEncoded(_ form: [String: String]) -> String {
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        func encode(_ string: String) -> String {
+            string.addingPercentEncoding(withAllowedCharacters: allowed) ?? string
+        }
+        return form.sorted { $0.key < $1.key }.map { "\(encode($0.key))=\(encode($0.value))" }.joined(separator: "&")
+    }
+
     /// v1.1 REST POST with a form body (follow, mute, block use these on x.com).
     func restPost(_ path: String, form: [String: String]) async throws -> Any {
-        var components = URLComponents()
-        components.queryItems = form.map { URLQueryItem(name: $0.key, value: $0.value) }
         let url = URL(string: "https://x.com\(path)")!
         var request = apiRequest(
-            url: url, method: "POST", body: Data((components.percentEncodedQuery ?? "").utf8),
+            url: url, method: "POST", body: Data(Self.formEncoded(form).utf8),
             transactionPath: url.path(), generator: catalog?.transactionGenerator)
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         let (json, status) = try await perform(request)

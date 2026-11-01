@@ -10,6 +10,7 @@ import TwitterUI
 package struct ProfileFeature {
     @ObservableState
     package struct State: Equatable {
+        @Presents var editProfile: EditProfileFeature.State?
         var errorMessage: String?
         var feeds: FeedsFeature.State?
         var hasFetchedUser = false
@@ -50,6 +51,8 @@ package struct ProfileFeature {
         case muteFailed(isMuting: Bool)
         case cachedUserLoaded(User)
         case delegate(ContentDelegate)
+        case editProfile(PresentationAction<EditProfileFeature.Action>)
+        case editProfileButtonTapped
         case feeds(FeedsFeature.Action)
         case followButtonTapped
         case listsButtonTapped
@@ -113,6 +116,22 @@ package struct ProfileFeature {
                 return .none
 
             case .delegate:
+                return .none
+
+            case .editProfileButtonTapped:
+                guard state.isViewer, let user = state.user else { return .none }
+                state.editProfile = EditProfileFeature.State(user: user)
+                return .none
+
+            case .editProfile(.presented(.delegate(.saved(let user)))):
+                state.user = user
+                @Shared(.viewer) var viewer
+                $viewer.withLock { $0 = user }
+                return .run { _ in
+                    await withErrorReporting { try await timelineCache.saveUser(user) }
+                }
+
+            case .editProfile:
                 return .none
 
             case .feeds(.delegate(let delegate)):
@@ -196,6 +215,9 @@ package struct ProfileFeature {
         }
         .ifLet(\.feeds, action: \.feeds) {
             FeedsFeature()
+        }
+        .ifLet(\.$editProfile, action: \.editProfile) {
+            EditProfileFeature()
         }
     }
 }
