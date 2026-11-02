@@ -4,6 +4,8 @@ A slopfork of [Sam Henri Gold's Twitter client](https://github.com/samhenrigold/
 
 "Slopfork" because most of it was written by AI coding agents with me steering and squinting at simulator screenshots. It's mainly for my own phone, but feel free to try it. There's no support, no roadmap and no promises, and it will break when X changes things.
 
+Lives on [GitHub](https://github.com/deymosxdeymos/Twitter-Retro) and [Tangled](https://tangled.org/@deymos.dev/Twitter-Retro), kept in step: pushes from a laptop go to both, and a GitHub Action mirrors anything else (cloud agents, merges on github.com) to Tangled.
+
 **What's different from upstream, how to build it, and what's been checked:** see [RETRO.md](RETRO.md).
 
 ## Credits

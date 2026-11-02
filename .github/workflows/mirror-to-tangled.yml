@@ -1,0 +1,33 @@
+# Keeps tangled.org/@deymos.dev/Twitter-Retro in step with GitHub, for pushes that don't come from a laptop
+# with Tangled as a second push URL (cloud agents, merges on github.com). Fast-forwards only: nothing on the knot
+# is forced or deleted.
+name: Mirror to Tangled
+
+on:
+  push:
+    branches: [retro-with-upstream]
+    tags: ['*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-to-tangled
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: retro-with-upstream # a tag push would otherwise land on a detached HEAD
+          fetch-depth: 0 # knots reject shallow pushes
+
+      - uses: sethcottle/tangled-mirror@97bfbbce3894478c567ee079fe1803009e8f5ad2 # v1.1.1
+        with:
+          repo: deymos.dev/Twitter-Retro
+          ssh-key: ${{ secrets.TANGLED_SSH_KEY }}
+          known-hosts: ${{ vars.TANGLED_KNOWN_HOSTS }}
+          branches: retro-with-upstream
