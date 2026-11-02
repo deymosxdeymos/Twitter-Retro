@@ -66,7 +66,7 @@ The bundle identifier is unchanged. Installing through the same AltStore setup s
 
 ## Upstream updates
 
-Keep the retro work as local commits before updating. Fetch upstream, inspect the changes, then merge `origin/main` into `retro-with-upstream`. Resolve presentation conflicts in favor of the retro UI without reverting reducer or client fixes. Rebuild and test after each merge. Do not merge unattended: upstream changes to navigation or the deployment target may need another compatibility pass.
+Keep the retro work as local commits before updating. Fetch upstream, inspect the changes, then merge Sam's `origin/main` into this repo's `main`. Resolve presentation conflicts in favor of the retro UI without reverting reducer or client fixes. Rebuild and test after each merge. Do not merge unattended: upstream changes to navigation or the deployment target may need another compatibility pass.
 
 ## Checks on a phone
 
