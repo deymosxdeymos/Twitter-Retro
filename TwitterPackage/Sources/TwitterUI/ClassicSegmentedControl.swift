@@ -42,6 +42,8 @@ package struct ClassicSegmentedControl<Value: Hashable>: View {
             shape.fill(palette.highlight).offset(y: 1)
         }
         .sensoryFeedback(.selection, trigger: selection)
+        // One group, so a label given to the control names it rather than replacing every segment's title.
+        .accessibilityElement(children: .contain)
     }
 }
 
