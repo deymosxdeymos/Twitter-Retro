@@ -417,8 +417,8 @@ struct FeedFeatureTests {
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.deleteButtonTapped(mine))
-        #expect(store.state.alert != nil)
-        await store.send(.alert(.presented(.confirmDelete(tweetID: mine.id))))
+        #expect(store.state.confirmation != nil)
+        await store.send(.confirmation(.presented(.confirmDelete(tweetID: mine.id))))
         #expect(store.state.items.map(\.id) == [FeedItem.tweet(FeedTweet(tweet: other)).id])
         await store.receive(\.deleteFailed)
         #expect(store.state.items.map(\.id) == state.items.map(\.id))

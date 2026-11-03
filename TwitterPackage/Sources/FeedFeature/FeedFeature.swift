@@ -33,6 +33,8 @@ package struct FeedFeature {
         /// here rather than in a store of the preview's own so it loads with this feed's dependencies (the mock client
         /// under `--mock-twitter`, in tests), and so its loading is cancelled when the menu goes away.
         @Presents var alert: AlertState<Action.Alert>?
+        /// Delete Tweet's question, asked as Twitter for iPhone did: an action sheet with the delete in red.
+        @Presents var confirmation: ConfirmationDialogState<Action.Alert>?
         @Presents var preview: FeedFeature.State?
         /// The post whose text is up in the system's translation sheet.
         var translating: Tweet?
@@ -98,6 +100,7 @@ package struct FeedFeature {
         case blockFailed(userID: String, isBlocking: Bool)
         case bookmarkButtonTapped(Tweet)
         case cachedPageLoaded(FeedPage, topItemID: FeedItem.ID?)
+        case confirmation(PresentationAction<Alert>)
         case delegate(ContentDelegate)
         case deleteButtonTapped(Tweet)
         /// Twitter refused to delete a post: the rows taken out for it go back where they were.
@@ -188,7 +191,8 @@ package struct FeedFeature {
                     await send(.blockFailed(userID: user.id, isBlocking: !isBlocking))
                 }
 
-            case .alert(.presented(.confirmDelete(let tweetID))):
+            case .alert(.presented(.confirmDelete(let tweetID))),
+                .confirmation(.presented(.confirmDelete(let tweetID))):
                 // Out of the timeline at once; back where it was if Twitter refuses.
                 var removed: [Int: FeedItem] = [:]
                 for (index, item) in state.items.enumerated().reversed()
@@ -202,24 +206,19 @@ package struct FeedFeature {
                     await send(.deleteFailed(removed: removed, message: error.localizedDescription))
                 }
 
-            case .alert:
+            case .alert, .confirmation:
                 return .none
 
             case .deleteButtonTapped(let tweet):
-                state.alert = AlertState {
+                state.confirmation = ConfirmationDialogState(titleVisibility: .hidden) {
                     TextState("Delete Tweet?")
                 } actions: {
                     ButtonState(role: .destructive, action: .confirmDelete(tweetID: tweet.id)) {
-                        TextState("Delete")
+                        TextState("Delete Tweet")
                     }
                     ButtonState(role: .cancel) {
                         TextState("Cancel")
                     }
-                } message: {
-                    TextState(
-                        "This can't be undone. It will be removed from your profile, the timelines of the accounts "
-                            + "that follow you, and search results."
-                    )
                 }
                 return .none
 
@@ -573,6 +572,7 @@ package struct FeedFeature {
             }
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$confirmation, action: \.confirmation)
         .ifLet(\.$preview, action: \.preview) {
             FeedFeature()
         }

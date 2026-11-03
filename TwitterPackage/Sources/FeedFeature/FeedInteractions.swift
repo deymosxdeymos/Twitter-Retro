@@ -19,6 +19,7 @@ private struct FeedInteractions: ViewModifier {
             }
             .task { store.send(.task) }
             .classicAlert(store.alert) { store.send(.alert($0)) }
+            .classicActionSheet(store.confirmation) { store.send(.confirmation($0)) }
             .translationPresentation(
                 isPresented: Binding {
                     store.translating != nil
@@ -60,6 +61,28 @@ extension View {
                     String(state: button.label),
                     role: button.role == .cancel ? .cancel : button.role == .destructive ? .destructive : nil
                 ) {
+                    button.withAction { action in
+                        if let action { send(.presented(action)) }
+                    }
+                }
+            }
+        )
+    }
+}
+
+extension View {
+    /// A TCA `ConfirmationDialogState` shown as ``View/classicActionSheet(isPresented:actions:)``: its buttons as the
+    /// sheet's (the sheet supplies Cancel), with dismissal and each choice sent back as presentation actions.
+    func classicActionSheet<Action>(
+        _ dialog: ConfirmationDialogState<Action>?, send: @escaping (PresentationAction<Action>) -> Void
+    ) -> some View {
+        classicActionSheet(
+            isPresented: Binding(
+                get: { dialog != nil },
+                set: { if !$0, dialog != nil { send(.dismiss) } }
+            ),
+            actions: (dialog?.buttons ?? []).filter { $0.role != .cancel }.map { button in
+                ClassicActionSheetAction(String(state: button.label), isDestructive: button.role == .destructive) {
                     button.withAction { action in
                         if let action { send(.presented(action)) }
                     }

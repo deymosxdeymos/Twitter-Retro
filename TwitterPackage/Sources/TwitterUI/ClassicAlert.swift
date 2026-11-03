@@ -41,13 +41,9 @@ private struct ClassicAlert: View {
     let message: String?
     let buttons: [ClassicAlertButton]
     let close: (ClassicAlertButton?) -> Void
-    @State private var phase = Phase.hidden
+    @State private var isShown = false
     @State private var isClosing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private enum Phase {
-        case hidden, overshoot, shown
-    }
 
     /// Cancel first, as iPhone OS laid them out.
     private var ordered: [ClassicAlertButton] {
@@ -56,31 +52,29 @@ private struct ClassicAlert: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(phase == .hidden ? 0 : 0.4)
+            Color.black.opacity(isShown ? 0.32 : 0)
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
 
             panel
-                .scaleEffect(reduceMotion ? 1 : scale)
-                .opacity(phase == .hidden ? 0 : 1)
+                .scaleEffect(reduceMotion || isShown ? 1 : (isClosing ? 0.96 : 1.12))
+                .opacity(isShown ? 1 : 0)
         }
-        .onAppear(perform: show)
+        .onAppear {
+            withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.32, dampingFraction: 0.72)) {
+                isShown = true
+            }
+        }
         .accessibilityAction(.escape) {
             if let cancel = buttons.first(where: { $0.role == .cancel }) { dismiss(cancel) }
         }
     }
 
-    private var scale: CGFloat {
-        switch phase {
-        case .hidden: 0.8
-        case .overshoot: 1.05
-        case .shown: 1
-        }
-    }
-
+    /// The old alert's navy glass, made the modern way: the page blurred behind it, then tinted, under a crisp rim
+    /// and a soft gloss, with rounder corners and a deeper, softer shadow than iPhone OS drew.
     private var panel: some View {
-        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
-        return VStack(spacing: 14) {
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        return VStack(spacing: 16) {
             VStack(spacing: 6) {
                 Text(title)
                     .font(.headline)
@@ -88,11 +82,12 @@ private struct ClassicAlert: View {
                 if let message, !message.isEmpty {
                     Text(message)
                         .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.88))
                 }
             }
             .multilineTextAlignment(.center)
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.6), radius: 0, y: -1)
+            .shadow(color: .black.opacity(0.45), radius: 0, y: -1)
             .fixedSize(horizontal: false, vertical: true)
 
             if ordered.count == 2 {
@@ -101,34 +96,39 @@ private struct ClassicAlert: View {
                 VStack(spacing: 8) { buttonViews }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 18)
-        .padding(.bottom, 14)
-        .frame(width: 284)
+        .padding(.horizontal, 16)
+        .padding(.top, 20)
+        .padding(.bottom, 16)
+        .frame(width: 290)
         .background {
-            shape
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.16, green: 0.24, blue: 0.43).opacity(0.94),
-                            Color(red: 0.05, green: 0.11, blue: 0.27).opacity(0.94)
-                        ],
-                        startPoint: .top, endPoint: .bottom)
-                )
+            shape.fill(.ultraThinMaterial)
+                .overlay {
+                    shape.fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.17, green: 0.27, blue: 0.48).opacity(0.82),
+                                Color(red: 0.05, green: 0.12, blue: 0.29).opacity(0.9)
+                            ],
+                            startPoint: .top, endPoint: .bottom)
+                    )
+                }
+                // The gloss: a broad sheen over the top, curving down at its edge as the old alert's did. An overlay,
+                // so its width never sizes the panel.
                 .overlay(alignment: .top) {
-                    // The panel's gloss: a broad, soft-edged sheen over its top.
                     Ellipse()
                         .fill(
                             LinearGradient(
-                                colors: [.white.opacity(0.28), .white.opacity(0.06)], startPoint: .top,
+                                colors: [.white.opacity(0.22), .white.opacity(0.03)], startPoint: .top,
                                 endPoint: .bottom)
                         )
-                        .frame(height: 70)
-                        .offset(y: -28)
-                        .clipShape(shape)
+                        .frame(width: 420, height: 90)
+                        .offset(y: -40)
                 }
-                .overlay { shape.strokeBorder(.white.opacity(0.92), lineWidth: 2) }
-                .shadow(color: .black.opacity(0.55), radius: 10, y: 5)
+                .clipShape(shape)
+                .environment(\.colorScheme, .dark)
+                .overlay { shape.strokeBorder(.white.opacity(0.85), lineWidth: 1.5) }
+                .overlay { shape.inset(by: 1.5).stroke(.black.opacity(0.35), lineWidth: 0.5) }
+                .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
         }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
@@ -137,76 +137,67 @@ private struct ClassicAlert: View {
     private var buttonViews: some View {
         ForEach(ordered) { button in
             Button(button.title) { dismiss(button) }
-                .buttonStyle(AlertButtonStyle(role: button.role))
+                .buttonStyle(
+                    AlertButtonStyle(
+                        role: button.role, isDefault: button.id == ordered.last?.id && button.role != .cancel)
+                )
                 .keyboardShortcut(
                     button.role == .cancel ? .cancelAction : (button.id == ordered.last?.id ? .defaultAction : nil))
-        }
-    }
-
-    private func show() {
-        guard !reduceMotion else {
-            withAnimation(.easeOut(duration: 0.15)) { phase = .shown }
-            return
-        }
-        withAnimation(.easeOut(duration: 0.14)) {
-            phase = .overshoot
-        } completion: {
-            withAnimation(.easeInOut(duration: 0.1)) { phase = .shown }
         }
     }
 
     private func dismiss(_ button: ClassicAlertButton?) {
         guard !isClosing else { return }
         isClosing = true
-        withAnimation(.easeIn(duration: 0.15)) {
-            phase = .hidden
+        withAnimation(.easeIn(duration: 0.14)) {
+            isShown = false
         } completion: {
             close(button)
         }
     }
 }
 
-/// The alert's buttons: glassy lozenges on the blue, the Cancel one darker, a destructive one red.
+/// The alert's buttons: glass lozenges on the navy, lit across their top half. The default one is a little brighter,
+/// Cancel a little darker. Old alerts had no red buttons; a destructive choice gets a soft red title instead, as
+/// modern alerts mark it.
 private struct AlertButtonStyle: ButtonStyle {
     let role: ClassicAlertButton.Role?
+    let isDefault: Bool
 
     func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
         configuration.label
-            .font(.headline)
+            .font(isDefault ? .headline : .body.weight(.medium))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
-            .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.6), radius: 0, y: -1)
+            .foregroundStyle(role == .destructive ? Color(red: 1, green: 0.6, blue: 0.58) : .white)
+            .shadow(color: .black.opacity(0.5), radius: 0, y: -1)
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 44)
             .background {
                 VStack(spacing: 0) {
                     LinearGradient(colors: top, startPoint: .top, endPoint: .bottom)
                     LinearGradient(colors: bottom, startPoint: .top, endPoint: .bottom)
                 }
-                .brightness(configuration.isPressed ? -0.12 : 0)
+                .brightness(configuration.isPressed ? 0.1 : 0)
                 .clipShape(shape)
-                .overlay { shape.stroke(.black.opacity(0.55), lineWidth: 1) }
-                .overlay { shape.inset(by: 1).stroke(.white.opacity(0.25), lineWidth: 0.5) }
+                .overlay { shape.stroke(.black.opacity(0.4), lineWidth: 1) }
+                .overlay { shape.inset(by: 1).stroke(.white.opacity(0.22), lineWidth: 0.5) }
             }
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
             .contentShape(shape)
     }
 
     private var top: [Color] {
-        switch role {
-        case .cancel: [.white.opacity(0.24), .white.opacity(0.12)]
-        case .destructive: [Color(red: 0.93, green: 0.42, blue: 0.40), Color(red: 0.82, green: 0.2, blue: 0.18)]
-        case nil: [.white.opacity(0.4), .white.opacity(0.24)]
-        }
+        role == .cancel
+            ? [.white.opacity(0.2), .white.opacity(0.1)]
+            : isDefault ? [.white.opacity(0.42), .white.opacity(0.26)] : [.white.opacity(0.3), .white.opacity(0.18)]
     }
 
     private var bottom: [Color] {
-        switch role {
-        case .cancel: [.white.opacity(0.04), .white.opacity(0.08)]
-        case .destructive: [Color(red: 0.7, green: 0.06, blue: 0.05), Color(red: 0.76, green: 0.1, blue: 0.09)]
-        case nil: [.white.opacity(0.14), .white.opacity(0.2)]
-        }
+        role == .cancel
+            ? [.white.opacity(0.03), .white.opacity(0.06)]
+            : isDefault ? [.white.opacity(0.14), .white.opacity(0.2)] : [.white.opacity(0.08), .white.opacity(0.13)]
     }
 }
