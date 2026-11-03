@@ -53,6 +53,8 @@ package struct TwitterClient: Sendable {
     package var setFollowing: @Sendable (_ isFollowing: Bool, _ userID: String) async throws -> Void
     package var setLiked: @Sendable (_ isLiked: Bool, _ tweetID: String) async throws -> Void
     package var setMuting: @Sendable (_ isMuting: Bool, _ userID: String) async throws -> Void
+    /// Pins one of the viewer's own Tweets to the top of their profile (replacing any pinned one), or unpins it.
+    package var setPinned: @Sendable (_ isPinned: Bool, _ tweetID: String) async throws -> Void
     package var setReposted: @Sendable (_ isReposted: Bool, _ tweetID: String) async throws -> Void
     package var signIn: @Sendable (_ cookies: [String: String]) async throws -> User
     package var signOut: @Sendable () async -> Void
@@ -85,6 +87,7 @@ extension TwitterClient: TestDependencyKey {
             setFollowing: { _, _ in },
             setLiked: { _, _ in },
             setMuting: { _, _ in },
+            setPinned: { _, _ in },
             setReposted: { _, _ in },
             signIn: { _ in .mock },
             signOut: {},

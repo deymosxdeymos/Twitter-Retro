@@ -43,6 +43,13 @@ package struct TweetMenu: View {
         }
 
         if tweet.author.id == viewer?.id {
+            Button {
+                store.send(.pinButtonTapped(tweet))
+            } label: {
+                Label(
+                    viewer?.pinnedTweetID == tweet.id ? "Unpin from Profile" : "Pin to Profile", twitterIcon: .pin)
+            }
+
             Button(role: .destructive) {
                 store.send(.deleteButtonTapped(tweet))
             } label: {

@@ -113,6 +113,8 @@ package struct FeedFeature {
         case muteFailed(userID: String, isMuting: Bool)
         case newPostsButtonTapped
         case pageResponse(Result<FeedPage, any Error>, isRefresh: Bool)
+        case pinButtonTapped(Tweet)
+        case pinFailed(previous: Tweet.ID?, message: String)
         case pollChoiceTapped(tweetID: Tweet.ID, choice: Int)
         case pollVoteFailed(tweetID: Tweet.ID, choice: Int)
         indirect case preview(PresentationAction<FeedFeature.Action>)
@@ -394,6 +396,31 @@ package struct FeedFeature {
 
             case .quotesButtonTapped(let tweet):
                 return .send(.delegate(.open(.quotes(tweetID: tweet.id))))
+
+            case .pinButtonTapped(let tweet):
+                @Shared(.viewer) var viewer
+                guard let current = viewer, tweet.author.id == current.id else { return .none }
+                let previous = current.pinnedTweetID
+                let pins = previous != tweet.id
+                // At once in the menu; the profile's own timeline reloads to show it on top, labelled Pinned.
+                $viewer.withLock { $0?.pinnedTweetID = pins ? tweet.id : nil }
+                let reloads = state.source == .userPosts(userID: current.id)
+                return .run { send in
+                    try await client.setPinned(pins, tweet.id)
+                    if reloads { await send(.refreshPulled) }
+                } catch: { error, send in
+                    await send(.pinFailed(previous: previous, message: error.localizedDescription))
+                }
+
+            case .pinFailed(let previous, let message):
+                @Shared(.viewer) var viewer
+                $viewer.withLock { $0?.pinnedTweetID = previous }
+                state.alert = AlertState {
+                    TextState(previous == nil ? "Couldn't pin Tweet" : "Couldn't change the pinned Tweet")
+                } message: {
+                    TextState(message)
+                }
+                return .none
 
             case .refreshPulled:
                 return loadPage(state: &state, isRefresh: true)

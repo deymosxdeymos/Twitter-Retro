@@ -28,6 +28,7 @@ extension TwitterClient: DependencyKey {
             setFollowing: { try await store.session().setFollowing($0, userID: $1) },
             setLiked: { try await store.session().setLiked($0, tweetID: $1) },
             setMuting: { try await store.session().setMuted($0, userID: $1) },
+            setPinned: { try await store.session().setPinned($0, tweetID: $1) },
             setReposted: { try await store.session().setReposted($0, tweetID: $1) },
             signIn: { try await store.signIn(cookies: $0) },
             signOut: { await store.signOut() },

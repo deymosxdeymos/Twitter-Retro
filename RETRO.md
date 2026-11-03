@@ -32,11 +32,14 @@ The current reducers, API client, database, text handling, media playback and co
 
 The feed uses the full available phone width. The system tab bar is hidden and its reserved space given back, so content sits directly on the classic tab bar. The tab bar's background extends under the home indicator, while its buttons stay in the safe area.
 
-Still system: sign-in. On iPhone, links open in Safari's view, so the iPad web panel is unchanged.
+Still system: sign-in, and the long-press menus on Tweets (iOS's own context menu). On iPhone, links open in Safari's view, so the iPad web panel is unchanged.
 
 ## Classic interaction pass
 
 - Composer and Drafts: a silver bar with Cancel and a blue Tweet button, and a plain numeric countdown instead of the circular gauge. On iPhone both cover the whole screen with square edges, as the old modal composer did, instead of iOS's rounded floating sheet; the iPad keeps a form sheet. Media, threads and today's character limit are unchanged.
+- Alerts are iPhone OS's `UIAlertView` (`ClassicAlert.swift`): a smoked-blue glass panel ringed in white pops over the dimmed page, buttons side by side with Cancel on the left, a destructive one red. Ask First (Favorite, Follow/Unfollow, Send), Delete Tweet, and errors all use it; TCA `AlertState`s go through a small adapter. The action sheet and the alert share one presenter.
+- Pin to Profile / Unpin from Profile in your own Tweets' menu (X's `PinTweet`/`UnpinTweet`). The menu updates at once; your profile's timeline reloads to show it on top, labelled Pinned. If X refuses, the previous pin comes back with an alert.
+- The profile Media grid marks videos with the classic play badge and GIFs with the GIF glyph, instead of glass circles.
 - Cancelling a Tweet with text asks with the same classic sheet: a red Delete Draft, Save Draft, and Cancel to keep writing.
 - Favorites: visible Like/Likes wording, held actions and accessibility labels say Favorite/Favorites to match the gold star. The X API calls are unchanged.
 - Classic Back button: a silver bezel instead of glass. The native edge swipe still works, including cancelled and repeated swipes.
