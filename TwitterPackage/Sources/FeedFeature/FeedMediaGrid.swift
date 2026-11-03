@@ -130,14 +130,18 @@ private struct MediaCell: View {
                 .overlay {
                     RemoteImage(url: cell.media.previewURL(variant: "small"), pointSize: 200)
                 }
-                .overlay(alignment: .bottomTrailing) {
-                    if cell.media.kind != .photo {
-                        Glyph(cell.media.kind == .gif ? TwitterIcon.gif.rawValue : TwitterIcon.play.rawValue, size: 12)
-                            .font(.caption)
+                .overlay {
+                    if cell.media.kind == .video {
+                        ClassicPlayBadge(size: 32)
+                    }
+                }
+                .overlay(alignment: .bottomLeading) {
+                    if cell.media.kind == .gif {
+                        TwitterIconView(.gif, size: 20)
                             .foregroundStyle(.mediaGlyph)
-                            .padding(6)
-                            .glassEffect(.regular, in: .circle)
-                            .padding(6)
+                            .shadow(color: .black.opacity(0.5), radius: 1)
+                            .padding(5)
+                            .accessibilityHidden(true)
                     }
                 }
                 .clipped()
@@ -146,7 +150,9 @@ private struct MediaCell: View {
         .buttonStyle(.plain)
         // A long press previews the whole photo, uncropped; the menu's first action opens the post, as a tap does.
         .mediaPreview(cell.media, link: cell.link, openTitle: "View Tweet", open: action)
-        .accessibilityLabel(cell.media.altText ?? (cell.media.kind == .photo ? "Image" : "Video"))
+        .accessibilityLabel(
+            cell.media.altText ?? (cell.media.kind == .photo ? "Image" : cell.media.kind == .gif ? "GIF" : "Video")
+        )
         .accessibilityHint("Opens the Tweet")
     }
 }

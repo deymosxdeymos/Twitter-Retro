@@ -18,7 +18,7 @@ private struct FeedInteractions: ViewModifier {
                 if phase == .interacting { trays.tweetID = nil }
             }
             .task { store.send(.task) }
-            .alert($store.scope(state: \.alert, action: \.alert))
+            .classicAlert(store.alert) { store.send(.alert($0)) }
             .translationPresentation(
                 isPresented: Binding {
                     store.translating != nil
@@ -39,5 +39,32 @@ private struct FeedInteractions: ViewModifier {
 extension View {
     func feedInteractions(store: StoreOf<FeedFeature>) -> some View {
         modifier(FeedInteractions(store: store))
+    }
+}
+
+extension View {
+    /// A TCA `AlertState` shown as ``View/classicAlert(_:message:isPresented:buttons:)``: its title, message and
+    /// buttons, with dismissal and each button's action sent back as presentation actions.
+    func classicAlert<Action>(
+        _ alert: AlertState<Action>?, send: @escaping (PresentationAction<Action>) -> Void
+    ) -> some View {
+        classicAlert(
+            alert.map { String(state: $0.title) } ?? "",
+            message: alert?.message.map { String(state: $0) },
+            isPresented: Binding(
+                get: { alert != nil },
+                set: { if !$0, alert != nil { send(.dismiss) } }
+            ),
+            buttons: (alert?.buttons ?? []).map { button in
+                ClassicAlertButton(
+                    String(state: button.label),
+                    role: button.role == .cancel ? .cancel : button.role == .destructive ? .destructive : nil
+                ) {
+                    button.withAction { action in
+                        if let action { send(.presented(action)) }
+                    }
+                }
+            }
+        )
     }
 }

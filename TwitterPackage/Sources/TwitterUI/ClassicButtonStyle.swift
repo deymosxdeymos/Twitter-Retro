@@ -69,9 +69,12 @@ package struct ClassicFollowButton: View {
         }
         .buttonStyle(isFollowing ? .classic : .classicProminent)
         .sensoryFeedback(.success, trigger: isFollowing)
-        .alert(isFollowing ? "Unfollow this account?" : "Follow this account?", isPresented: $isConfirming) {
-            Button(isFollowing ? "Unfollow" : "Follow", role: isFollowing ? .destructive : nil, action: action)
-            Button("Cancel", role: .cancel) {}
-        }
+        .classicAlert(
+            isFollowing ? "Unfollow this account?" : "Follow this account?", isPresented: $isConfirming,
+            buttons: [
+                ClassicAlertButton("Cancel", role: .cancel),
+                ClassicAlertButton(
+                    isFollowing ? "Unfollow" : "Follow", role: isFollowing ? .destructive : nil, perform: action)
+            ])
     }
 }

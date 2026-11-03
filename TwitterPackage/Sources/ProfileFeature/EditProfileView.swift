@@ -90,17 +90,12 @@ struct EditProfileView: View {
             if let data = await ProfilePicture.banner(from: pickedBanner) { store.send(.bannerPicked(data)) }
             self.pickedBanner = nil
         }
-        .alert(
-            "Couldn't Save Profile",
+        .classicAlert(
+            "Couldn't Save Profile", message: store.errorMessage,
             isPresented: Binding(
                 get: { store.errorMessage != nil },
-                set: { if !$0 { store.send(.errorDismissed) } }
-            )
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(store.errorMessage ?? "")
-        }
+                set: { if !$0, store.errorMessage != nil { store.send(.errorDismissed) } }
+            ))
     }
 
     /// A row with its label on the left and the value typed in on the right, as 4.x's profile fields.

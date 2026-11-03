@@ -19,42 +19,10 @@ extension View {
     /// iPhone OS 3's `UIActionSheet`: the page dims and a slate tray rises with stacked glossy buttons, the dark Cancel
     /// set apart at the bottom. The chosen action runs after the sheet is gone, so it can present a sheet of its own.
     package func classicActionSheet(isPresented: Binding<Bool>, actions: [ClassicActionSheetAction]) -> some View {
-        modifier(ClassicActionSheetModifier(isPresented: isPresented, actions: actions))
-    }
-}
-
-private struct ClassicActionSheetModifier: ViewModifier {
-    @Binding var isPresented: Bool
-    let actions: [ClassicActionSheetAction]
-    @State private var isCovering = false
-    @State private var pending: (() -> Void)?
-
-    func body(content: Content) -> some View {
-        content
-            .onChange(of: isPresented, initial: true) { _, isPresented in
-                guard isPresented != isCovering else { return }
-                // The cover only hosts the sheet; the dimming and slide are the sheet's own animation.
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) { isCovering = isPresented }
-            }
-            .fullScreenCover(isPresented: $isCovering, onDismiss: finish) {
-                ClassicActionSheet(actions: actions) { action in
-                    pending = action?.perform
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) { isCovering = false }
-                }
-                .presentationBackground(.clear)
-            }
-    }
-
-    /// The action goes first, while whatever presented the sheet still considers it open; its own state may close it.
-    private func finish() {
-        let action = pending
-        pending = nil
-        action?()
-        isPresented = false
+        modifier(
+            ClassicOverlayPresenter(isPresented: isPresented) { close in
+                ClassicActionSheet(actions: actions) { close($0?.perform) }
+            })
     }
 }
 

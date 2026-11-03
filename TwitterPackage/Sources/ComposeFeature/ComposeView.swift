@@ -45,10 +45,12 @@ package struct ComposeView: View {
                 .buttonStyle(.classicProminent)
                 .disabled(!store.canPost)
                 .keyboardShortcut(.return, modifiers: .command)
-                .alert("Send this Tweet?", isPresented: $isConfirmingTweet) {
-                    Button("Tweet") { store.send(.postButtonTapped) }
-                    Button("Cancel", role: .cancel) {}
-                }
+                .classicAlert(
+                    "Send this Tweet?", isPresented: $isConfirmingTweet,
+                    buttons: [
+                        ClassicAlertButton("Cancel", role: .cancel),
+                        ClassicAlertButton("Tweet") { store.send(.postButtonTapped) }
+                    ])
             }
 
             ScrollView {

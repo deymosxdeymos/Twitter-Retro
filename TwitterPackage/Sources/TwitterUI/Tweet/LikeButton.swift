@@ -22,10 +22,9 @@ package struct FavoriteActionButton<Label: View>: View {
         }
         .accessibilityLabel(isFavorite ? "Remove Favorite" : "Favorite")
         .sensoryFeedback(.selection, trigger: isFavorite)
-        .alert("Favorite this Tweet?", isPresented: $isConfirming) {
-            Button("Favorite", action: action)
-            Button("Cancel", role: .cancel) {}
-        }
+        .classicAlert(
+            "Favorite this Tweet?", isPresented: $isConfirming,
+            buttons: [ClassicAlertButton("Cancel", role: .cancel), ClassicAlertButton("Favorite", perform: action)])
     }
 }
 
